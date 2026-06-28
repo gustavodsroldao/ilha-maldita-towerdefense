@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ilha Maldita — Tower Defense</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+
+  <!-- ── HUD ── -->
+  <div id="hud">
+    <div id="hud-tl">
+      <div class="hud-box" id="lives-box"><span id="lives-icons"></span></div>
+      <div class="hud-box" id="gold-box">🪙 <span id="gold-amount">200</span></div>
+      <div class="hud-box" id="score-box">⭐ <span id="score-amount">0</span></div>
+    </div>
+    <div id="hud-tr">
+      <div class="hud-box" id="wave-box">Onda <span id="wave-current">0</span>/10</div>
+      <div class="hud-box" id="wind-box">
+        <canvas id="compass" width="52" height="52"></canvas>
+        <span id="wind-label">—</span>
+      </div>
+      <button id="btn-speed" class="hidden">▶ 1×</button>
+      <button id="btn-pause-hud">⏸</button>
+    </div>
+    <div id="mp-hud-bar" class="hidden"></div>
+    <div id="wave-toast" class="hidden"></div>
+    <div id="hud-tip">💡 Clique nos círculos dourados para construir torres</div>
+    <div id="hud-bottom">
+      <div id="tower-panel" class="panel hidden"></div>
+      <div id="upgrade-panel" class="panel hidden"></div>
+      <button id="btn-next-wave" class="hidden">⚓ Iniciar Onda</button>
+    </div>
+  </div>
+
+  <!-- ── Main Menu ── -->
+  <div id="menu-overlay">
+    <div id="menu-topbar">
+      <div id="player-profile">
+        <div class="player-avatar-icon">🏴‍☠️</div>
+        <div id="player-name-wrap">
+          <span id="player-name-display">Capitão</span>
+          <button id="btn-edit-name" title="Editar nome">✏️</button>
+        </div>
+        <input id="player-name-input" type="text" maxlength="20"
+               placeholder="Seu nome" class="hidden" autocomplete="off">
+      </div>
+    </div>
+
+    <div id="menu-center">
+      <div id="menu-title-block">
+        <div id="menu-anchor-deco">⚓</div>
+        <h1 id="menu-title">ILHA MALDITA</h1>
+        <p id="menu-tagline">Tower Defense</p>
+      </div>
+      <div id="menu-btn-group">
+        <button id="btn-play-solo" class="menu-main-btn">⚔️ Jogar Solo</button>
+        <div id="menu-secondary-row">
+          <button id="btn-play-mp" class="menu-sec-btn">👥 Multijogador</button>
+          <button id="btn-howtoplay" class="menu-sec-btn">📖 Como Jogar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-floater floater-1">🚢</div>
+    <div class="menu-floater floater-2">⚓</div>
+  </div>
+
+  <!-- ── Map selection ── -->
+  <div id="map-select-overlay" class="hidden">
+    <div class="map-select-wrap">
+      <h2 class="map-select-title">Escolha o Mapa</h2>
+      <div id="map-cards"></div>
+      <button id="btn-back-menu" class="back-btn">← Voltar</button>
+    </div>
+  </div>
+
+  <!-- ── Multiplayer lobby ── -->
+  <div id="mp-overlay" class="hidden">
+    <div class="mp-box">
+      <div class="mp-header">
+        <h2 class="mp-title">🌊 Multijogador</h2>
+        <button id="btn-mp-close" class="mp-close-btn">✕</button>
+      </div>
+
+      <div id="mp-screen-connecting" class="mp-screen">
+        <div class="mp-spinner">⚓</div>
+        <p>Conectando ao servidor...</p>
+      </div>
+
+      <div id="mp-screen-main" class="mp-screen hidden">
+        <div class="mp-options">
+          <button id="btn-create-room" class="mp-action-btn">
+            🏰 Criar Sala
+            <span class="mp-action-sub">Seja o anfitrião</span>
+          </button>
+          <div class="mp-or">ou</div>
+          <div class="mp-join-row">
+            <input id="room-code-input" class="mp-code-input"
+                   placeholder="ABCD" maxlength="4"
+                   autocomplete="off" spellcheck="false">
+            <button id="btn-join-room" class="mp-join-btn">⚓ Entrar</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="mp-screen-lobby" class="mp-screen hidden">
+        <div id="mp-room-code-row">
+          <span class="mp-label">Código da Sala</span>
+          <span id="mp-code-display" class="mp-code-big">----</span>
+          <button id="btn-copy-code" class="mp-copy-btn" title="Copiar código">📋</button>
+        </div>
+        <div id="mp-players-list" class="mp-players-list"></div>
+        <div id="mp-map-select-wrap" class="hidden">
+          <p class="mp-label" style="margin-bottom:6px">Escolha o mapa:</p>
+          <div id="mp-map-btns" class="mp-map-btns"></div>
+        </div>
+        <button id="btn-mp-ready" class="mp-ready-btn" disabled>
+          Aguardando jogadores...
+        </button>
+        <div id="mp-status-msg" class="mp-status-msg"></div>
+      </div>
+
+      <div id="mp-screen-error" class="mp-screen hidden">
+        <div class="mp-error-icon">⚠️</div>
+        <p id="mp-error-msg">Erro ao conectar ao servidor</p>
+        <p class="mp-error-hint">Certifique-se que o servidor está rodando: <code>node server.js</code></p>
+        <button id="btn-mp-retry" class="mp-action-btn">Tentar Novamente</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── How to Play ── -->
+  <div id="howtoplay-overlay" class="hidden">
+    <div class="htp-box">
+      <h2 class="htp-title">📖 Como Jogar</h2>
+      <div class="htp-content">
+        <div class="htp-section">
+          <h3>Objetivo</h3>
+          <p>Defenda o porto construindo torres para destruir as frotas inimigas antes que cheguem ao porto.</p>
+        </div>
+        <div class="htp-section">
+          <h3>Torres Disponíveis</h3>
+          <div class="htp-tower-grid" id="htp-tower-grid"></div>
+        </div>
+        <div class="htp-section">
+          <h3>Controles</h3>
+          <p>🖱️ Clique nos círculos dourados para construir torres</p>
+          <p>⌨️ WASD / setas — movem a câmera</p>
+          <p>⌨️ Q / E — giram a câmera lateralmente</p>
+          <p>🖱️ Scroll — zoom in/out</p>
+          <p>⌨️ P — pausa &nbsp;|&nbsp; Esc — fecha painéis &nbsp;|&nbsp; Del — vende torre selecionada</p>
+          <p>⏩ Botão de velocidade (aparece durante ondas): 1× → 2× → 3×</p>
+        </div>
+        <div class="htp-section">
+          <h3>Sinergias</h3>
+          <p>⛓️ + 💣 Corrente desacelera → Canhão causa 2× dano</p>
+          <p>🔭 Torre Vigia → +25% alcance para torres adjacentes</p>
+          <p>⚡ Farol → raio encadeia até 2 navios extras</p>
+        </div>
+        <div class="htp-section">
+          <h3>Multijogador</h3>
+          <p>Modo cooperativo 2 jogadores — ambos constroem torres na mesma ilha e defendem juntos!</p>
+          <p>Requer o servidor WebSocket: <code>node server.js</code></p>
+        </div>
+      </div>
+      <button id="btn-close-htp" class="menu-main-btn"
+              style="margin-top:20px;font-size:16px;padding:12px 36px;width:auto">
+        ⚓ Fechar
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Pause menu ── -->
+  <div id="pause-overlay" class="hidden">
+    <div class="pause-box">
+      <h2 class="pause-title">⚓ Pausa</h2>
+      <div id="pause-stats" class="pause-stats"></div>
+      <div class="pause-btns">
+        <button id="btn-pause-continue" class="pause-btn">▶ Continuar</button>
+        <button id="btn-pause-invite"   class="pause-btn pause-btn-blue">👥 Convidar Amigo</button>
+        <button id="btn-pause-giveup"   class="pause-btn pause-btn-red">🏳 Desistir</button>
+        <button id="btn-pause-tomenu"   class="pause-btn pause-btn-dim">🏠 Menu Principal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Game over ── -->
+  <div id="gameover-overlay" class="hidden">
+    <h2 id="go-title"></h2>
+    <p id="go-score"></p>
+    <button id="btn-restart">⚓ Menu Principal</button>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

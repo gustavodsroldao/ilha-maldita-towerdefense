@@ -1,0 +1,12 @@
+{
+  "name": "ilha-maldita",
+  "version": "1.0.0",
+  "description": "Tower Defense Pirata — Multiplayer WebSocket Server",
+  "scripts": {
+    "server": "node server.js",
+    "serve": "npx serve -l 5500 ."
+  },
+  "dependencies": {
+    "ws": "^8.17.0"
+  }
+}

@@ -281,8 +281,9 @@ document.getElementById('btn-mp-retry').addEventListener('click', () => {
 document.getElementById('btn-create-room').addEventListener('click', () => {
   mp.createRoom(nickname);
 
-  mp.on('room-created', ({ code }) => {
-    mp.roomCode = code;
+  mp.on('room-created', ({ code, playerId }) => {
+    mp.roomCode  = code;
+    mp.playerId  = playerId;
     showMpLobby(code, true);
     mpSetStatus('Aguardando 2º jogador...');
   });
@@ -295,14 +296,23 @@ document.getElementById('btn-join-room').addEventListener('click', () => {
   if (code.length < 4) { mpSetStatus('⚠️ Código precisa ter 4 letras'); return; }
   mp.joinRoom(code, nickname);
 
-  mp.on('room-joined', ({ code, players, mapId }) => {
-    mp.roomCode = code;
-    // Store partner nickname
-    const partner = players.find(p => p.nickname !== nickname);
+  mp.on('room-joined', ({ code, players, mapId, inProgress, playerId }) => {
+    mp.roomCode  = code;
+    mp.playerId  = playerId;
+    const hostId = players[0]?.id;   // first player in the room is the creator
+    // Store partner nickname (by id, so identical default names don't collide)
+    const partner = players.find(p => p.id !== playerId);
     if (partner) mp.partnerNickname = partner.nickname;
 
+    // Mid-match invite: skip the lobby, wait for the host's snapshot
+    if (inProgress) { joinMidMatch(mapId); return; }
+
     showMpLobby(code, false);
-    for (const p of players) addMpPlayerSlot(p.nickname, p.nickname === nickname);
+    // showMpLobby already added self; add only the other players
+    for (const p of players) {
+      if (p.id === playerId) continue;
+      addMpPlayerSlot(p.nickname, { isHost: p.id === hostId, pid: p.id });
+    }
 
     if (mapId) {
       mp.selectedMapId = mapId;
@@ -358,18 +368,18 @@ function bindGameStart() {
 // ── player-joined / left ──────────────────────────────────────────────────
 
 function bindMpPlayerEvents() {
-  mp.on('player-joined', ({ nickname: pn }) => {
+  mp.on('player-joined', ({ nickname: pn, playerId: pid }) => {
     mp.partnerNickname = pn;
-    addMpPlayerSlot(pn, false);
+    addMpPlayerSlot(pn, { isHost: false, pid });   // joiners are always crew
     enableReadyBtn();
     mpSetStatus(`${pn} entrou na sala!`);
     // Host can now mark ready
     document.getElementById('btn-mp-ready').disabled = !mp.selectedMapId;
   });
 
-  mp.on('player-left', ({ nickname: pn }) => {
+  mp.on('player-left', ({ nickname: pn, playerId: pid }) => {
     mpSetStatus(`${pn} saiu da sala`);
-    removePlayerSlot(pn);
+    removePlayerSlot(pid);
     document.getElementById('btn-mp-ready').disabled = true;
     document.getElementById('btn-mp-ready').textContent = 'Aguardando jogadores...';
     document.getElementById('btn-mp-ready').classList.remove('ready');
@@ -382,13 +392,12 @@ function showMpLobby(code, isHost) {
   document.getElementById('mp-code-display').textContent = code;
   mpScreen('lobby');
 
-  // Clear players list, add self
+  // Clear players list, add self (creator is the sole Capitão)
   document.getElementById('mp-players-list').textContent = '';
-  addMpPlayerSlot(nickname, true);
+  addMpPlayerSlot(nickname, { isYou: true, isHost, pid: mp.playerId });
 
   // Add empty second slot
-  const empty = buildMpPlayerSlot('⏳ Aguardando...', false, 'empty');
-  document.getElementById('mp-players-list').appendChild(empty);
+  document.getElementById('mp-players-list').appendChild(buildPlaceholderSlot());
 
   // Map select (host only)
   const mapWrap = document.getElementById('mp-map-select-wrap');
@@ -409,34 +418,55 @@ function showMpLobby(code, isHost) {
   bindMpPlayerEvents();
 }
 
-function buildMpPlayerSlot(label, isYou, id = null) {
+// Only the room creator is the Capitão (host); everyone else is Tripulante (crew).
+// Slots are keyed by server player id so identical nicknames never collide.
+function buildMpPlayerSlot(nick, { isYou = false, isHost = false, pid = null } = {}) {
   const slot = document.createElement('div');
-  slot.className = `mp-player-slot ${isYou ? 'you' : 'filled'}`;
-  if (id) slot.dataset.id = id;
-  const icon = document.createElement('span'); icon.className = 'mp-player-icon';
-  icon.textContent = isYou ? '🏴‍☠️' : '🦜';
-  const name = document.createElement('span'); name.textContent = label;
+  slot.className = `mp-player-slot ${isYou ? 'you' : 'filled'}${isHost ? ' host' : ''}`;
+  if (pid != null) slot.dataset.pid = pid;
+
+  const icon = document.createElement('span');
+  icon.className = 'mp-player-icon';
+  icon.textContent = isHost ? '👑' : '🦜';
+
+  const name = document.createElement('span');
+  name.className = 'mp-player-name';
+  name.textContent = isYou ? `${nick} (você)` : nick;
+
+  const role = document.createElement('span');
+  role.className = 'mp-player-role';
+  role.textContent = isHost ? 'Capitão' : 'Tripulante';
+
+  slot.appendChild(icon);
+  slot.appendChild(name);
+  slot.appendChild(role);
+  return slot;
+}
+
+function buildPlaceholderSlot() {
+  const slot = document.createElement('div');
+  slot.className = 'mp-player-slot';
+  slot.dataset.id = 'empty';
+  const icon = document.createElement('span'); icon.className = 'mp-player-icon'; icon.textContent = '⏳';
+  const name = document.createElement('span'); name.className = 'mp-player-name'; name.textContent = 'Aguardando...';
   slot.appendChild(icon); slot.appendChild(name);
   return slot;
 }
 
-function addMpPlayerSlot(pName, isYou) {
-  const list  = document.getElementById('mp-players-list');
-  // Remove empty slot if present
+function addMpPlayerSlot(nick, opts = {}) {
+  const list = document.getElementById('mp-players-list');
+  // Guard against duplicates (same player re-reported)
+  if (opts.pid != null && list.querySelector(`[data-pid="${opts.pid}"]`)) return;
   const empty = list.querySelector('[data-id="empty"]');
   if (empty) empty.remove();
-  list.appendChild(buildMpPlayerSlot(pName, isYou));
+  list.appendChild(buildMpPlayerSlot(nick, opts));
 }
 
-function removePlayerSlot(pName) {
-  const list  = document.getElementById('mp-players-list');
-  for (const slot of list.querySelectorAll('.mp-player-slot')) {
-    if (slot.querySelector('span:last-child')?.textContent === pName) {
-      slot.remove(); break;
-    }
-  }
-  const empty = buildMpPlayerSlot('⏳ Aguardando...', false, 'empty');
-  list.appendChild(empty);
+function removePlayerSlot(pid) {
+  const list = document.getElementById('mp-players-list');
+  const slot = list.querySelector(`[data-pid="${pid}"]`);
+  if (slot) slot.remove();
+  if (!list.querySelector('[data-id="empty"]')) list.appendChild(buildPlaceholderSlot());
 }
 
 function buildMpMapButtons() {
@@ -470,4 +500,72 @@ function enableReadyBtn() {
     btn.disabled = !mp.selectedMapId;
     btn.textContent = mp.selectedMapId ? '⚓ Pronto!' : 'Escolha um mapa...';
   }
+}
+
+// ── Convidar amigo durante a partida ──────────────────────────────────────
+
+// Host side: called by the pause-menu invite button (wired via game.onInvite)
+game.onInvite = startInviteMidMatch;
+
+async function startInviteMidMatch() {
+  const overlay  = document.getElementById('invite-overlay');
+  const status   = document.getElementById('invite-status');
+  const codeWrap = document.getElementById('invite-code-wrap');
+  overlay.classList.remove('hidden');
+  codeWrap.classList.add('hidden');
+  status.textContent = 'Conectando ao servidor...';
+
+  mp = new MultiplayerManager();
+  try {
+    await mp.connect();
+  } catch {
+    status.textContent = '⚠️ Servidor não encontrado. Inicie server.js (node server.js).';
+    return;
+  }
+
+  mp.on('room-created', ({ code }) => {
+    mp.roomCode = code;
+    game.attachMp(mp);                 // solo game becomes co-op host
+    game.ui.showMpBar(nickname, '?');
+    document.getElementById('invite-code').textContent = code;
+    status.textContent = 'Sala criada! Aguardando amigo entrar...';
+    codeWrap.classList.remove('hidden');
+  });
+
+  mp.on('player-joined', ({ nickname: pn }) => {
+    mp.partnerNickname = pn;
+    game.ui.showMpBar(nickname, pn);
+    mp.broadcastSnapshot(game.buildSnapshot());
+    status.textContent = `${pn} entrou! Pode fechar e continuar jogando.`;
+    game._showToast(`${pn} entrou na partida!`);
+  });
+
+  mp.createRoom(nickname, game.mapDef.id, true);
+}
+
+document.getElementById('btn-invite-copy')?.addEventListener('click', () => {
+  const code = document.getElementById('invite-code').textContent;
+  navigator.clipboard?.writeText(code);
+  document.getElementById('invite-status').textContent = 'Código copiado!';
+});
+
+document.getElementById('btn-invite-close')?.addEventListener('click', () => {
+  document.getElementById('invite-overlay').classList.add('hidden');
+  game._closePauseMenu();   // resume the match (room stays open in background)
+});
+
+// Joiner side: a friend who entered a mid-match room, waiting for the snapshot
+function joinMidMatch(mapId) {
+  mpSetStatus('Entrando na partida em andamento...');
+  mp.on('game-snapshot', async ({ snapshot }) => {
+    const def = MAP_DEFS[snapshot?.mapId] ?? MAP_DEFS[mapId];
+    if (!def) { mpSetStatus('⚠️ Mapa inválido'); return; }
+    document.getElementById('mp-overlay').classList.add('hidden');
+    showLoading(def.name);
+    await game.init(def, mp);
+    hideLoading();
+    game.start();
+    game.applySnapshot(snapshot);
+    game.ui.showMpBar(nickname, mp.partnerNickname ?? '?');
+  });
 }

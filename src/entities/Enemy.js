@@ -67,7 +67,8 @@ export class Enemy {
     const { key, scale } = MODEL_MAP[type] ?? { key: 'ship-small', scale: 1.0 };
     const model = AssetLoader.get(key);
     model.scale.setScalar(scale);
-    model.rotation.y = Math.PI; // orient bow forward along +Z
+    // Bow faces +Z natively; heading is set on the group in update(), so no
+    // base offset here — a Math.PI flip would make ships sail stern-first.
 
     if (type === 'ghost') {
       model.traverse(n => {

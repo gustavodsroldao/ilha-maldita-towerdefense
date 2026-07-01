@@ -37,7 +37,8 @@ wss.on('connection', ws => {
       rooms.set(roomCode, {
         code: roomCode,
         players: [{ id: playerId, nickname: msg.nickname, ws, ready: false }],
-        mapId: null,
+        mapId: msg.mapId ?? null,
+        inProgress: !!msg.inProgress,   // room opened mid-match (invite friend)
       });
       send(ws, { type: 'room-created', code: roomCode, playerId });
       return;
@@ -58,6 +59,7 @@ wss.on('connection', ws => {
         playerId,
         players: room.players.map(p => ({ id: p.id, nickname: p.nickname })),
         mapId: room.mapId,
+        inProgress: !!room.inProgress,
       });
       broadcast(room, { type: 'player-joined', playerId, nickname: msg.nickname }, playerId);
       return;

@@ -821,6 +821,8 @@ body {
 
 .mp-code-input {
   flex: 1;
+  min-width: 0;          /* let the input shrink so the Entrar button stays inside the box */
+  box-sizing: border-box;
   background: rgba(0,0,0,0.55);
   border: 2px solid #2a5090;
   border-radius: 10px;
@@ -877,7 +879,15 @@ body {
 }
 .mp-player-slot.filled { border-color: #2a4a6a; color: #a8c8e0; }
 .mp-player-slot.you    { border-color: #2a6040; color: #90d8a0; }
+.mp-player-slot.host   { border-color: #7a5e18; }
 .mp-player-icon { font-size: 18px; }
+.mp-player-name { flex: 1; }
+.mp-player-role {
+  font-size: 11px; letter-spacing: 0.5px;
+  padding: 2px 8px; border-radius: 999px;
+  background: rgba(255,255,255,0.06); color: #7a90a4;
+}
+.mp-player-slot.host .mp-player-role { background: rgba(200,150,30,0.18); color: #e6c250; }
 
 .mp-map-btns { display: flex; gap: 8px; flex-wrap: wrap; }
 .mp-map-option {
@@ -961,3 +971,25 @@ body {
 .htp-tc-name { font-size: 12px; font-weight: bold; color: #f0e6d3; }
 .htp-tc-cost { font-size: 11px; color: #c8a030; }
 .htp-tc-desc { font-size: 11px; color: #7a6040; margin-top: 2px; }
+
+/* ── Invite friend mid-match ── */
+#invite-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 8, 18, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 95;
+  backdrop-filter: blur(6px);
+}
+.invite-status { color: #c8b87a; font-size: 15px; text-align: center; margin: 0; }
+.invite-code-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.invite-code-wrap .mp-code-big { flex: none; text-align: center; }
+.invite-hint { font-size: 12px; color: #8a7a55; text-align: center; margin: 0; line-height: 1.5; }

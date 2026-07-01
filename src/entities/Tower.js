@@ -7,19 +7,19 @@ export const TOWER_DEFS = {
   cannon: {
     icon: '💣', name: 'Canhão',
     desc: '2× dmg em navios lentos',
-    range: 13, damage: 35, fireRate: 1.0, cost: 100,
+    range: 20, damage: 35, fireRate: 1.0, cost: 100,
     color: 0x222222,
   },
   pitch: {
     icon: '🔥', name: 'Piche',
     desc: 'Zona de fogo no impacto',
-    range: 9,  damage: 0,  fireRate: 0.6, cost: 75,
+    range: 16, damage: 0,  fireRate: 0.6, cost: 75,
     color: 0x331100,
   },
   chain: {
     icon: '⛓️', name: 'Corrente',
     desc: 'Desacelera −45% por 2.5s',
-    range: 11, damage: 18, fireRate: 0.7, cost: 125,
+    range: 18, damage: 18, fireRate: 0.7, cost: 125,
     color: 0x556677,
   },
   watchtower: {
@@ -31,14 +31,14 @@ export const TOWER_DEFS = {
   lighthouse: {
     icon: '⚡', name: 'Farol',
     desc: 'Raio encadeia 2 navios',
-    range: 13, damage: 28, fireRate: 1.5, cost: 150,
+    range: 20, damage: 28, fireRate: 1.5, cost: 150,
     color: 0x888800,
   },
-  kraken: {
-    icon: '🐙', name: 'Kraken',
-    desc: 'Alto dano, longo alcance',
-    range: 17, damage: 75, fireRate: 0.45, cost: 300,
-    color: 0x220044,
+  fortress: {
+    icon: '🏰', name: 'Fortaleza',
+    desc: 'Defesa pesada: alto dano e alcance',
+    range: 24, damage: 75, fireRate: 0.45, cost: 300,
+    color: 0x6a5a48,
   },
 };
 
@@ -120,14 +120,14 @@ export class Tower {
       });
       grp.add(model);
 
-    } else if (type === 'kraken') {
+    } else if (type === 'fortress') {
       const model = AssetLoader.get('tower-complete-large');
       model.scale.setScalar(1.0);
-      // Keep original Kenney texture — just add subtle dark emissive tint
+      // Big stone keep — warm defensive tint to match the fortress theme
       model.traverse(n => {
         if (n.isMesh && n.material) {
-          n.material.emissive = new THREE.Color(0x110022);
-          n.material.emissiveIntensity = 0.4;
+          n.material.emissive = new THREE.Color(0x2a1e0c);
+          n.material.emissiveIntensity = 0.35;
         }
       });
       grp.add(model);

@@ -36,10 +36,11 @@ export class MultiplayerManager {
     if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify(msg));
   }
 
-  createRoom(nickname) {
-    this.nickname = nickname;
-    this.isHost   = true;
-    this.send({ type: 'create-room', nickname });
+  createRoom(nickname, mapId = null, inProgress = false) {
+    this.nickname      = nickname;
+    this.isHost        = true;
+    this.selectedMapId = mapId;
+    this.send({ type: 'create-room', nickname, mapId, inProgress });
   }
 
   joinRoom(code, nickname) {
@@ -73,6 +74,11 @@ export class MultiplayerManager {
 
   broadcastWaveStart() {
     this.send({ type: 'wave-start' });
+  }
+
+  // Full game state sent to a friend who joins mid-match
+  broadcastSnapshot(snapshot) {
+    this.send({ type: 'game-snapshot', snapshot });
   }
 
   disconnect() {

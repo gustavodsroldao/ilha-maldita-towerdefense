@@ -259,6 +259,52 @@ export class Game {
 
   // ── Multiplayer event wiring ──────────────────────────────────────────────
 
+  // Attach a multiplayer session to an already-running solo game (invite flow)
+  attachMp(mp) {
+    this.mp = mp;
+    this._bindMpEvents();
+  }
+
+  // Snapshot of the current match, sent to a friend joining mid-game
+  buildSnapshot() {
+    const towers = [];
+    this.map.slots.forEach((s, i) => {
+      if (s.tower) towers.push({ slotIndex: i, type: s.tower.type, level: s.tower.level });
+    });
+    return {
+      mapId:   this.mapDef.id,
+      wave:    this.waveManager.currentWave,
+      windDir: this.waveManager.windDir,
+      towers,
+    };
+  }
+
+  // Rebuild the host's match on the joiner's side, then wait for next wave
+  applySnapshot(snap) {
+    for (const t of snap.towers ?? []) {
+      this.placeRemoteTower(t.type, t.slotIndex);
+      const slot = this.map.slots[t.slotIndex];
+      if (slot?.tower) {
+        while (slot.tower.level < t.level) slot.tower.upgradeFromRemote();
+        slot.tower._applyLevelVisual();
+      }
+    }
+    this._recalcWatchtowerSynergy();
+
+    if (typeof snap.wave === 'number') {
+      this.waveManager.currentWave = snap.wave;
+      this.ui.onWaveChanged(snap.wave);
+    }
+    if (snap.windDir) {
+      this.waveManager.windDir = snap.windDir;
+      this.ui.onWindChanged(snap.windDir);
+    }
+
+    // Enemies aren't mirrored — joiner starts between waves, in sync for the next one
+    this.state = 'between-waves';
+    this.ui.showNextWaveButton();
+  }
+
   _bindMpEvents() {
     this.mp.on('tower-placed',   ({ slotIndex, towerType }) => this.placeRemoteTower(towerType, slotIndex));
     this.mp.on('tower-upgraded', ({ slotIndex }) => this.upgradeRemoteTower(slotIndex));
@@ -346,6 +392,11 @@ export class Game {
         this.sellTower(tower, slot);
         this.ui.hidePanels();
       }
+      // 1/2/3 set game speed directly (only mid-wave, like the speed button)
+      if ((e.key === '1' || e.key === '2' || e.key === '3') && this.state === 'playing') {
+        this.gameSpeed = Number(e.key);
+        this.ui.updateSpeedBtn(this.gameSpeed);
+      }
     });
     window.addEventListener('keyup',  e => { keys[e.key] = false; });
     window.addEventListener('blur',   clearKeys);
@@ -367,56 +418,42 @@ export class Game {
     canvas.addEventListener('mousemove',   e => this._onHover(e));
   }
 
-  _onHover(e) {
+  // Raycast slot discs AND placed tower models, resolving back to the owning slot.
+  // The tower mesh covers the slot disc, so without this a click on a built
+  // tower would miss the disc and never open the upgrade panel.
+  _pickSlot(e) {
     this._mouse.x =  (e.clientX / window.innerWidth)  * 2 - 1;
     this._mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
     this._raycaster.setFromCamera(this._mouse, this.scene.camera);
 
-    const slotMeshes = this.map.slots.flatMap(s => {
-      const objs = [s.mesh];
-      s.mesh.traverse(n => { if (n !== s.mesh) objs.push(n); });
-      return objs;
-    });
+    const roots = new Map();   // mesh subtree root → slot
+    for (const s of this.map.slots) {
+      roots.set(s.mesh, s);
+      if (s.tower) roots.set(s.tower.mesh, s);
+    }
 
-    const hits = this._raycaster.intersectObjects(slotMeshes, true);
-    this.scene.renderer.domElement.style.cursor = hits.length > 0 ? 'pointer' : 'default';
+    const targets = [...roots.keys()];
+    const hits = this._raycaster.intersectObjects(targets, true);
+    if (hits.length === 0) return null;
+
+    let node = hits[0].object;
+    while (node) {
+      if (roots.has(node)) return roots.get(node);
+      node = node.parent;
+    }
+    return null;
+  }
+
+  _onHover(e) {
+    const slot = this._pickSlot(e);
+    this.scene.renderer.domElement.style.cursor = slot ? 'pointer' : 'default';
   }
 
   _onClick(e) {
-    this._mouse.x =  (e.clientX / window.innerWidth)  * 2 - 1;
-    this._mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-
-    this._raycaster.setFromCamera(this._mouse, this.scene.camera);
-
-    const slotMeshes = this.map.slots.flatMap(s => {
-      const objs = [s.mesh];
-      s.mesh.traverse(n => { if (n !== s.mesh) objs.push(n); });
-      return objs;
-    });
-
-    const hits = this._raycaster.intersectObjects(slotMeshes, true);
-    if (hits.length > 0) {
-      const hitObj = hits[0].object;
-      const slot = this.map.slots.find(s => {
-        let node = hitObj;
-        while (node) {
-          if (node === s.mesh) return true;
-          node = node.parent;
-        }
-        return false;
-      });
-
-      if (slot) {
-        if (slot.isEmpty) {
-          this.ui.showTowerPanel(slot);
-        } else {
-          this.ui.showUpgradePanel(slot.tower, slot);
-        }
-        return;
-      }
-    }
-
-    this.ui.hidePanels();
+    const slot = this._pickSlot(e);
+    if (!slot) { this.ui.hidePanels(); return; }
+    if (slot.isEmpty) this.ui.showTowerPanel(slot);
+    else              this.ui.showUpgradePanel(slot.tower, slot);
   }
 
   _togglePause() {
@@ -477,7 +514,10 @@ export class Game {
         this._showToast('Já está em modo multijogador!');
         return;
       }
-      this._showToast('Em breve: convidar amigo durante a partida 🚧');
+      document.getElementById('pause-overlay')?.classList.add('hidden');
+      // main.js owns nickname + MP lobby, so it wires the actual invite flow
+      if (this.onInvite) this.onInvite();
+      else this._showToast('Convite indisponível');
     });
   }
 

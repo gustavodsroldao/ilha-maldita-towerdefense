@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { AssetLoader } from './AssetLoader.js';
+import { AssetLoader } from '../managers/AssetLoader.js';
 import { Projectile } from './Projectile.js';
-import { Audio } from './AudioManager.js';
+import { Audio } from '../managers/AudioManager.js';
 
 export const TOWER_DEFS = {
   cannon: {

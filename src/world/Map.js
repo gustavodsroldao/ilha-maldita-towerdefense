@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { AssetLoader } from './AssetLoader.js';
+import { AssetLoader } from '../managers/AssetLoader.js';
 
 export class GameMap {
   constructor(scene, mapDef) {

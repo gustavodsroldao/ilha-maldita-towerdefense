@@ -1,4 +1,4 @@
-import { TOWER_DEFS } from './Tower.js';
+import { TOWER_DEFS } from '../entities/Tower.js';
 
 function el(tag, attrs = {}, children = []) {
   const node = document.createElement(tag);

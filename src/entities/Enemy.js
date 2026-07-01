@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { AssetLoader } from './AssetLoader.js';
-import { Audio } from './AudioManager.js';
+import { AssetLoader } from '../managers/AssetLoader.js';
+import { Audio } from '../managers/AudioManager.js';
 
 export const ENEMY_DEFS = {
   barge:   { hp: 80,   speed: 3.5, reward: 10,  liveCost: 1, armor: 0,    color: 0x5a4030, scale: 1.0 },

@@ -1,15 +1,15 @@
 import * as THREE from 'three';
 import { EventBus }       from './EventBus.js';
-import { AssetLoader }    from './AssetLoader.js';
+import { AssetLoader }    from '../managers/AssetLoader.js';
 import { Scene }          from './Scene.js';
-import { GameMap }        from './Map.js';
-import { Enemy }          from './Enemy.js';
-import { Tower, TOWER_DEFS } from './Tower.js';
-import { Projectile, FireZone } from './Projectile.js';
-import { WaveManager }    from './WaveManager.js';
-import { EconomyManager } from './EconomyManager.js';
-import { UIManager }      from './UIManager.js';
-import { TutorialManager } from './TutorialManager.js';
+import { GameMap }        from '../world/Map.js';
+import { Enemy }          from '../entities/Enemy.js';
+import { Tower, TOWER_DEFS } from '../entities/Tower.js';
+import { Projectile, FireZone } from '../entities/Projectile.js';
+import { WaveManager }    from '../managers/WaveManager.js';
+import { EconomyManager } from '../managers/EconomyManager.js';
+import { UIManager }      from '../managers/UIManager.js';
+import { TutorialManager } from '../managers/TutorialManager.js';
 
 export class Game {
   constructor() {

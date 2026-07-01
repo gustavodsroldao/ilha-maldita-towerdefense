@@ -1,7 +1,7 @@
-import { Game } from './src/Game.js';
-import { MAP_DEFS, DIFF_LABELS, DIFF_COLORS, DIFF_STARS } from './src/MapDefs.js';
-import { MultiplayerManager } from './src/MultiplayerManager.js';
-import { TOWER_DEFS } from './src/Tower.js';
+import { Game } from './src/core/Game.js';
+import { MAP_DEFS, DIFF_LABELS, DIFF_COLORS, DIFF_STARS } from './src/world/MapDefs.js';
+import { MultiplayerManager } from './src/managers/MultiplayerManager.js';
+import { TOWER_DEFS } from './src/entities/Tower.js';
 
 const game = new Game();
 let mp = null; // MultiplayerManager (created on demand)

@@ -40,10 +40,10 @@ export class WaveManager {
     this._active      = false;
     this._aliveCount  = 0;
     this._pendingSpawn = 0;
+    this._hpScale     = 1;
   }
 
   startNextWave() {
-    if (this.currentWave >= this.totalWaves) return;
     this.currentWave++;
 
     // Roll wind
@@ -51,9 +51,18 @@ export class WaveManager {
     this.windVector = WIND_VECS[this.windDir].clone();
     this.bus.emit('wind-changed', { dir: this.windDir });
 
+    // Scripted waves 1..N, then procedural endless waves that keep scaling up
+    const groups = this.currentWave <= WAVES.length
+      ? WAVES[this.currentWave - 1]
+      : this._endlessWave(this.currentWave);
+
+    // Endless waves also toughen ships (more HP the further you go)
+    const over = Math.max(0, this.currentWave - WAVES.length);
+    this._hpScale = 1 + over * 0.35;
+
     // Build spawn queue
     this._queue = [];
-    for (const { type, count } of WAVES[this.currentWave - 1]) {
+    for (const { type, count } of groups) {
       for (let i = 0; i < count; i++) this._queue.push(type);
     }
     this._aliveCount   = this._queue.length;
@@ -62,6 +71,18 @@ export class WaveManager {
     this._active       = true;
 
     this.bus.emit('wave-started', { wave: this.currentWave, wind: this.windDir });
+  }
+
+  // Procedural wave for endless mode — grows in count and adds tougher ships
+  _endlessWave(wave) {
+    const over = wave - WAVES.length;   // 1, 2, 3, ...
+    const groups = [
+      { type: 'galleon', count: 3 + over },
+      { type: 'frigate', count: 4 + over },
+      { type: 'barge',   count: 2 + Math.floor(over / 2) },
+    ];
+    if (over >= 2) groups.push({ type: 'ghost', count: Math.floor(over / 2) });
+    return groups;
   }
 
   onEnemyDied()         { this._aliveCount--; this._checkWaveDone(); }
@@ -81,7 +102,7 @@ export class WaveManager {
       this._spawnTimer = this._spawnInterval;
       const type = this._queue.shift();
       this._pendingSpawn--;
-      this.bus.emit('spawn-enemy', { type });
+      this.bus.emit('spawn-enemy', { type, hpScale: this._hpScale });
     }
   }
 
@@ -91,6 +112,7 @@ export class WaveManager {
     this._active       = false;
     this._aliveCount   = 0;
     this._pendingSpawn = 0;
+    this._hpScale      = 1;
     this.windDir       = 'N';
     this.windVector    = WIND_VECS['N'].clone();
   }

@@ -58,6 +58,10 @@ export class MultiplayerManager {
     this.send({ type: 'ready' });
   }
 
+  setUnready() {
+    this.send({ type: 'unready' });
+  }
+
   // ── In-game broadcasts ────────────────────────────────────────────────────
 
   broadcastTowerPlaced(slotIndex, towerType) {

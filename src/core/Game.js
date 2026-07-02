@@ -30,6 +30,7 @@ export class Game {
 
     this.gameSpeed   = 1;
     this.killCount   = 0;
+    this.endless     = false;   // unlocked after clearing wave 10
 
     this._raycaster  = new THREE.Raycaster();
     this._mouse      = new THREE.Vector2();
@@ -59,6 +60,7 @@ export class Game {
   }
 
   start() {
+    document.body.classList.add('in-game');   // reveal HUD (hidden on menu)
     const g = this.mapDef.startGold ?? 200;
     this.state = 'between-waves';
     this._clock.start();
@@ -339,19 +341,19 @@ export class Game {
       this.ui.updateSpeedBtn(1);
       this.ui.hideSpeedBtn();
 
-      if (this.waveManager.currentWave >= this.waveManager.totalWaves) {
-        this._gameOver(true);
+      // Cleared the last scripted wave (10) for the first time → offer endless
+      if (this.waveManager.currentWave >= this.waveManager.totalWaves && !this.endless) {
+        this._onVictory();
       } else {
-        const bonus = (this.mapDef.waveBonusBase ?? 60) + this.waveManager.currentWave * 8;
-        this.economy.earn(bonus);
-        this._showToast(`+${bonus} 🪙 bônus de onda!`);
+        this._awardWaveBonus();
         this.state = 'between-waves';
         this.ui.showNextWaveButton();
       }
     });
 
-    this.bus.on('spawn-enemy', ({ type }) => {
+    this.bus.on('spawn-enemy', ({ type, hpScale = 1 }) => {
       const enemy = new Enemy(type, this.map.path, this);
+      if (hpScale !== 1) { enemy.maxHp *= hpScale; enemy.hp *= hpScale; }
       this.enemies.push(enemy);
       this.scene.addObject(enemy.mesh);
     });
@@ -385,8 +387,13 @@ export class Game {
 
     window.addEventListener('keydown', e => {
       keys[e.key] = true;
-      if (e.key === 'Escape') this.ui.hidePanels();
-      if (e.key === 'p' || e.key === 'P' || e.key === 'Escape' && this.state === 'paused') this._togglePause();
+      // Esc: close an open panel first, otherwise open/close the pause menu
+      if (e.key === 'Escape') {
+        if (this.ui.isPanelOpen()) this.ui.hidePanels();
+        else this._togglePause();
+        return;
+      }
+      if (e.key === 'p' || e.key === 'P') this._togglePause();
       if ((e.key === 'Delete' || e.key === 'Backspace') && this.ui.hasSelectedTower()) {
         const { tower, slot } = this.ui.getSelection();
         this.sellTower(tower, slot);
@@ -485,13 +492,23 @@ export class Game {
       stats.appendChild(p);
     }
 
+    this._resetGiveup();
     overlay.classList.remove('hidden');
   }
 
   _closePauseMenu() {
+    this._resetGiveup();
     document.getElementById('pause-overlay')?.classList.add('hidden');
     this.state = this._prevState ?? 'between-waves';
     if (this.state === 'playing') this._clock.start();
+  }
+
+  // Two-step "give up" so an accidental click doesn't end the run
+  _resetGiveup() {
+    clearTimeout(this._giveupTimer);
+    this._giveupArmed = false;
+    const b = document.getElementById('btn-pause-giveup');
+    if (b) { b.textContent = '🏳 Desistir'; b.classList.remove('armed'); }
   }
 
   _bindPauseMenu() {
@@ -499,7 +516,19 @@ export class Game {
 
     document.getElementById('btn-pause-continue')?.addEventListener('click', () => this._closePauseMenu());
 
-    document.getElementById('btn-pause-giveup')?.addEventListener('click', () => {
+    const giveupBtn = document.getElementById('btn-pause-giveup');
+    giveupBtn?.addEventListener('click', () => {
+      if (!this._giveupArmed) {
+        // First click: arm and ask for confirmation (auto-disarms after 3s)
+        this._giveupArmed = true;
+        giveupBtn.textContent = '⚠ Confirmar desistência?';
+        giveupBtn.classList.add('armed');
+        clearTimeout(this._giveupTimer);
+        this._giveupTimer = setTimeout(() => this._resetGiveup(), 3000);
+        return;
+      }
+      // Second click: confirmed
+      this._resetGiveup();
       document.getElementById('pause-overlay')?.classList.add('hidden');
       this._gameOver(false);
     });
@@ -519,6 +548,27 @@ export class Game {
       if (this.onInvite) this.onInvite();
       else this._showToast('Convite indisponível');
     });
+  }
+
+  _awardWaveBonus() {
+    const bonus = (this.mapDef.waveBonusBase ?? 60) + this.waveManager.currentWave * 8;
+    this.economy.earn(bonus);
+    this._showToast(`+${bonus} 🪙 bônus de onda!`);
+  }
+
+  // Cleared wave 10: show victory, but let the player continue into endless mode
+  _onVictory() {
+    this.state = 'between-waves';   // not gameover — continuing is allowed
+    this.ui.showVictory(this.economy.score, () => this._startEndless());
+  }
+
+  _startEndless() {
+    this.endless = true;
+    this._awardWaveBonus();
+    this.ui.onWaveChanged(this.waveManager.currentWave, true);   // switch HUD to ∞
+    this._showToast('🌊 Modo Infinito! Cada onda fica mais difícil…');
+    this.state = 'between-waves';
+    this.ui.showNextWaveButton();
   }
 
   _gameOver(won) {

@@ -7,19 +7,19 @@ export const TOWER_DEFS = {
   cannon: {
     icon: '💣', name: 'Canhão',
     desc: '2× dmg em navios lentos',
-    range: 20, damage: 35, fireRate: 1.0, cost: 100,
+    range: 16, damage: 35, fireRate: 1.0, cost: 100,
     color: 0x222222,
   },
   pitch: {
     icon: '🔥', name: 'Piche',
     desc: 'Zona de fogo no impacto',
-    range: 16, damage: 0,  fireRate: 0.6, cost: 75,
+    range: 13, damage: 0,  fireRate: 0.6, cost: 75,
     color: 0x331100,
   },
   chain: {
     icon: '⛓️', name: 'Corrente',
     desc: 'Desacelera −45% por 2.5s',
-    range: 18, damage: 18, fireRate: 0.7, cost: 125,
+    range: 15, damage: 18, fireRate: 0.7, cost: 125,
     color: 0x556677,
   },
   watchtower: {
@@ -31,13 +31,13 @@ export const TOWER_DEFS = {
   lighthouse: {
     icon: '⚡', name: 'Farol',
     desc: 'Raio encadeia 2 navios',
-    range: 20, damage: 28, fireRate: 1.5, cost: 150,
+    range: 16, damage: 28, fireRate: 1.5, cost: 150,
     color: 0x888800,
   },
   fortress: {
     icon: '🏰', name: 'Fortaleza',
     desc: 'Defesa pesada: alto dano e alcance',
-    range: 24, damage: 75, fireRate: 0.45, cost: 300,
+    range: 19, damage: 75, fireRate: 0.45, cost: 300,
     color: 0x6a5a48,
   },
 };

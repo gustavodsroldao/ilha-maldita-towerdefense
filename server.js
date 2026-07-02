@@ -83,6 +83,13 @@ wss.on('connection', ws => {
       }
     }
 
+    if (msg.type === 'unready') {
+      const p = room.players.find(p => p.id === playerId);
+      if (p) p.ready = false;
+      broadcast(room, { type: 'player-unready', playerId }, playerId);
+      return;
+    }
+
     broadcast(room, { ...msg, fromId: playerId }, playerId);
   });
 

@@ -24,6 +24,7 @@ export class UIManager {
     this.$gold     = document.getElementById('gold-amount');
     this.$score    = document.getElementById('score-amount');
     this.$wave     = document.getElementById('wave-current');
+    this.$waveTotal = document.getElementById('wave-total');
     this.$wind     = document.getElementById('wind-label');
     this.$compass  = document.getElementById('compass');
     this.$twrPanel = document.getElementById('tower-panel');
@@ -73,6 +74,9 @@ export class UIManager {
 
   hasSelectedTower() { return this._selectedTower !== null; }
   getSelection()     { return { tower: this._selectedTower, slot: this._selectedSlot }; }
+  isPanelOpen() {
+    return !this.$twrPanel.classList.contains('hidden') || !this.$upPanel.classList.contains('hidden');
+  }
 
   // ── Panels ────────────────────────────────────────────────────────────────
 
@@ -116,6 +120,7 @@ export class UIManager {
     if (this._selectedTower) this._selectedTower.showRange(false);
     this._selectedSlot  = null;
     this._selectedTower = null;
+    this._upBtn         = null;
     this.$twrPanel.classList.add('hidden');
     this.$upPanel.classList.add('hidden');
   }
@@ -139,6 +144,23 @@ export class UIManager {
     title.textContent = won ? '🏆 Vitória!' : '💀 Derrota!';
     title.style.color = won ? '#ffd700' : '#ff4444';
     scoreEl.textContent = `Pontuação: ${score}`;
+    document.getElementById('btn-continue-endless')?.classList.add('hidden');
+    overlay.classList.remove('hidden');
+  }
+
+  // Wave-10 victory with the option to continue into endless mode
+  showVictory(score, onContinue) {
+    const overlay = document.getElementById('gameover-overlay');
+    const title   = document.getElementById('go-title');
+    title.textContent = '🏆 Vitória!';
+    title.style.color = '#ffd700';
+    document.getElementById('go-score').textContent =
+      `Pontuação: ${score} — você sobreviveu às 10 ondas!`;
+    const contBtn = document.getElementById('btn-continue-endless');
+    if (contBtn) {
+      contBtn.classList.remove('hidden');
+      contBtn.onclick = () => { overlay.classList.add('hidden'); onContinue?.(); };
+    }
     overlay.classList.remove('hidden');
   }
 
@@ -174,6 +196,7 @@ export class UIManager {
     this.$upPanel.appendChild(heading);
     this.$upPanel.appendChild(stats);
 
+    this._upBtn = null;
     if (t.level < 3) {
       const upCost = t.upgradeCost;
       const canUp  = this.game.economy.gold >= upCost;
@@ -184,6 +207,7 @@ export class UIManager {
         this.game.upgradeTower(t);
         this._refreshUpgradePanel();
       });
+      this._upBtn = upBtn;
       this.$upPanel.appendChild(upBtn);
     } else {
       const maxNote = el('div', {}, ['✨ Nível máximo']);
@@ -200,10 +224,19 @@ export class UIManager {
     this.$upPanel.appendChild(sellBtn);
   }
 
+  // Per-frame: just enable/disable the upgrade button as gold changes. No DOM rebuild.
+  _tickUpgradePanel() {
+    const t = this._selectedTower;
+    if (!t || !this._upBtn || t.level >= 3) return;
+    this._upBtn.disabled = this.game.economy.gold < t.upgradeCost;
+  }
+
   update(delta = 0) {
     if (!this.$twrPanel.classList.contains('hidden')) this._refreshTowerPanel();
+    // Only tick affordability — NEVER rebuild the panel per-frame, or the button
+    // gets recreated between mousedown/mouseup and the click never fires.
     if (!this.$upPanel.classList.contains('hidden') && this._selectedTower) {
-      this._refreshUpgradePanel();
+      this._tickUpgradePanel();
     }
 
     if (this.$tip) {
@@ -229,7 +262,10 @@ export class UIManager {
     }
   }
 
-  onWaveChanged(wave) { this.$wave.textContent = wave; }
+  onWaveChanged(wave, endless = false) {
+    this.$wave.textContent = wave;
+    if (endless && this.$waveTotal) this.$waveTotal.textContent = '∞';
+  }
 
   onWindChanged(dir) {
     this.$wind.textContent = dir;

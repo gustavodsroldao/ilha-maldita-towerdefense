@@ -155,27 +155,36 @@ function buildPathSVG(path) {
   svg.setAttribute('height', H);
   svg.setAttribute('class',  'map-preview-svg');
 
+  // Aged sea-chart look: parchment field, dashed ink route, X marks the port
   const bg = document.createElementNS(ns, 'rect');
   bg.setAttribute('width', W); bg.setAttribute('height', H);
-  bg.setAttribute('fill', 'rgba(0,16,34,0.9)'); bg.setAttribute('rx', '8');
+  bg.setAttribute('fill', '#d8c79a'); bg.setAttribute('rx', '8');
   svg.appendChild(bg);
 
   const poly = document.createElementNS(ns, 'polyline');
   poly.setAttribute('points', path.map(([x,z]) => `${mx(x).toFixed(1)},${mz(z).toFixed(1)}`).join(' '));
-  poly.setAttribute('fill', 'none'); poly.setAttribute('stroke', '#4488cc');
+  poly.setAttribute('fill', 'none'); poly.setAttribute('stroke', '#6b4a1e');
   poly.setAttribute('stroke-width', '2.5');
+  poly.setAttribute('stroke-dasharray', '5 4');
   poly.setAttribute('stroke-linecap', 'round'); poly.setAttribute('stroke-linejoin', 'round');
   svg.appendChild(poly);
 
-  const dot = (cx, cy, fill) => {
-    const c = document.createElementNS(ns, 'circle');
-    c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', '5');
-    c.setAttribute('fill', fill);
-    return c;
-  };
   const [sx, sz] = path[0], [ex, ez] = path[path.length - 1];
-  svg.appendChild(dot(mx(sx).toFixed(1), mz(sz).toFixed(1), '#44ff88'));
-  svg.appendChild(dot(mx(ex).toFixed(1), mz(ez).toFixed(1), '#ffd700'));
+
+  // Start: green anchor point
+  const start = document.createElementNS(ns, 'circle');
+  start.setAttribute('cx', mx(sx).toFixed(1)); start.setAttribute('cy', mz(sz).toFixed(1));
+  start.setAttribute('r', '4.5'); start.setAttribute('fill', '#2e7d32');
+  start.setAttribute('stroke', '#173e18'); start.setAttribute('stroke-width', '1');
+  svg.appendChild(start);
+
+  // End: red X marking the port
+  const pxc = +mx(ex).toFixed(1), pyc = +mz(ez).toFixed(1);
+  const cross = document.createElementNS(ns, 'path');
+  cross.setAttribute('d', `M${pxc-5},${pyc-5} L${pxc+5},${pyc+5} M${pxc+5},${pyc-5} L${pxc-5},${pyc+5}`);
+  cross.setAttribute('stroke', '#a11f13'); cross.setAttribute('stroke-width', '3');
+  cross.setAttribute('stroke-linecap', 'round');
+  svg.appendChild(cross);
 
   return svg;
 }
@@ -339,15 +348,26 @@ document.getElementById('btn-copy-code').addEventListener('click', () => {
   navigator.clipboard?.writeText(code).then(() => mpSetStatus('Código copiado!'));
 });
 
-// ── Ready button ──────────────────────────────────────────────────────────
+// ── Ready button (toggle) ─────────────────────────────────────────────────
 
 document.getElementById('btn-mp-ready').addEventListener('click', () => {
-  if (!mp.selectedMapId) { mpSetStatus('⚠️ Escolha um mapa primeiro'); return; }
-  mp.setReady();
-  document.getElementById('btn-mp-ready').classList.add('ready');
-  document.getElementById('btn-mp-ready').textContent = '✔ Pronto!';
-  document.getElementById('btn-mp-ready').disabled = true;
-  mpSetStatus('Aguardando o parceiro ficar pronto...');
+  const btn = document.getElementById('btn-mp-ready');
+  const isReady = btn.classList.contains('ready');
+
+  if (isReady) {
+    // Cancel ready
+    mp.setUnready();
+    btn.classList.remove('ready');
+    btn.textContent = '⚓ Pronto!';
+    mpSetStatus('Você cancelou o pronto.');
+  } else {
+    // Mark as ready
+    if (!mp.selectedMapId) { mpSetStatus('⚠️ Escolha um mapa primeiro'); return; }
+    mp.setReady();
+    btn.classList.add('ready');
+    btn.textContent = '✔ Pronto! (cancelar)';
+    mpSetStatus('Aguardando o parceiro ficar pronto...');
+  }
 });
 
 // ── game-start ────────────────────────────────────────────────────────────
@@ -383,6 +403,10 @@ function bindMpPlayerEvents() {
     document.getElementById('btn-mp-ready').disabled = true;
     document.getElementById('btn-mp-ready').textContent = 'Aguardando jogadores...';
     document.getElementById('btn-mp-ready').classList.remove('ready');
+  });
+
+  mp.on('player-unready', () => {
+    mpSetStatus('⚠️ Parceiro cancelou o pronto!');
   });
 }
 

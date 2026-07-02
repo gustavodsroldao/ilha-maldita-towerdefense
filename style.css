@@ -21,7 +21,9 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 10;
+  display: none;                 /* hidden on menu; shown once a match starts */
 }
+body.in-game #hud { display: block; }
 
 #hud-tl {
   position: absolute;
@@ -56,29 +58,47 @@ body {
   border: 2px solid #a07c18;
   border-bottom-color: #5a4008;
   border-right-color: #5a4008;
-  border-radius: 8px;
-  padding: 7px 13px;
-  font-size: 15px;
+  border-radius: 10px;
+  padding: 7px 14px;
+  font-size: 14px;
+  font-family: 'IM Fell English SC', Georgia, serif;
+  letter-spacing: 0.4px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 4px 14px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,200,80,0.10);
+  gap: 7px;
+  backdrop-filter: blur(6px);
+  box-shadow:
+    0 0 0 2px #1a0e02,
+    0 4px 18px rgba(0,0,0,0.7),
+    inset 0 1px 0 rgba(255,210,100,0.15);
+  color: #e8d3a0;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.hud-box:hover {
+  border-color: #d9a441;
+  box-shadow:
+    0 0 0 2px #1a0e02,
+    0 6px 22px rgba(217,164,65,0.25),
+    inset 0 1px 0 rgba(255,210,100,0.2);
 }
 
 #wind-box { flex-direction: column; align-items: center; gap: 2px; padding: 8px; }
 #wind-label { font-size: 12px; color: #c8b87a; }
 
-/* ── Panels ──────────────────────────────────────────── */
+/* ── Panels ────────────────────────────────────────── */
 .panel {
-  background: linear-gradient(180deg, rgba(22,13,4,0.98) 0%, rgba(8,4,1,0.98) 100%);
-  border: 2px solid #9a7218;
+  background: linear-gradient(180deg, rgba(26,16,4,0.99) 0%, rgba(8,4,1,0.99) 100%);
+  border: 2px solid #7a5518;
   border-top-color: #c89a28;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 12px;
-  backdrop-filter: blur(6px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.75), inset 0 1px 0 rgba(200,160,40,0.12);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 0 0 3px rgba(20,12,4,0.9),
+    0 10px 36px rgba(0,0,0,0.8),
+    inset 0 1px 0 rgba(200,160,40,0.16);
   pointer-events: all;
+  font-family: 'IM Fell English SC', Georgia, serif;
 }
 
 #tower-panel {
@@ -89,104 +109,174 @@ body {
 }
 
 .tower-opt {
-  background: linear-gradient(180deg, rgba(70,48,8,0.65) 0%, rgba(32,20,2,0.70) 100%);
+  background: linear-gradient(180deg, rgba(70,48,8,0.70) 0%, rgba(32,20,2,0.76) 100%);
   border: 2px solid #5a3e08;
-  border-top-color: #7a5818;
-  border-radius: 8px;
-  padding: 8px 10px;
+  border-top-color: #8a6018;
+  border-radius: 10px;
+  padding: 9px 11px;
   cursor: pointer;
   text-align: center;
-  min-width: 76px;
-  transition: all 0.15s;
-  box-shadow: inset 0 1px 0 rgba(255,200,50,0.08), 0 2px 6px rgba(0,0,0,0.4);
+  min-width: 80px;
+  transition: all 0.18s;
+  box-shadow:
+    0 0 0 2px rgba(20,12,2,0.75),
+    inset 0 1px 0 rgba(255,200,50,0.10),
+    0 3px 8px rgba(0,0,0,0.45);
+  font-family: 'IM Fell English SC', Georgia, serif;
 }
 .tower-opt:hover:not(.disabled) {
-  background: linear-gradient(180deg, rgba(150,100,15,0.75) 0%, rgba(70,48,8,0.80) 100%);
-  border-color: #ffd700;
+  background: linear-gradient(180deg, rgba(150,100,15,0.80) 0%, rgba(80,52,8,0.86) 100%);
+  border-color: #d9a441;
   border-top-color: #ffe87a;
-  box-shadow: 0 4px 16px rgba(255,215,0,0.28), inset 0 1px 0 rgba(255,220,60,0.18);
-  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 2px rgba(20,12,2,0.75),
+    0 6px 20px rgba(217,164,65,0.32),
+    inset 0 1px 0 rgba(255,220,60,0.22);
+  transform: translateY(-3px);
 }
-.tower-opt.disabled { opacity: 0.38; cursor: not-allowed; }
+.tower-opt.disabled { opacity: 0.35; cursor: not-allowed; }
 .tower-opt .t-icon  { font-size: 22px; }
-.tower-opt .t-name  { font-size: 11px; font-weight: bold; margin-top: 3px; }
-.tower-opt .t-cost  { font-size: 11px; color: #ffd700; }
-.tower-opt .t-desc  { font-size: 9px; color: #a89060; margin-top: 2px; }
+.tower-opt .t-name  { font-size: 11px; font-weight: bold; margin-top: 3px; color: #e8d3a0; letter-spacing: 0.3px; }
+.tower-opt .t-cost  { font-size: 11px; color: #f2ba52; margin-top: 2px; }
+.tower-opt .t-desc  { font-size: 9px; color: #9a8060; margin-top: 2px; line-height: 1.3; }
 
-#upgrade-panel { min-width: 170px; text-align: center; }
-#upgrade-panel h3 { font-size: 14px; margin-bottom: 8px; color: #ffd700; }
-#upgrade-panel .up-stats { font-size: 11px; color: #a89060; margin-bottom: 8px; line-height: 1.5; }
+#upgrade-panel { min-width: 180px; text-align: center; }
+#upgrade-panel h3 {
+  font-family: 'Pirata One', Georgia, serif;
+  font-size: 17px; margin-bottom: 4px;
+  background: linear-gradient(180deg, #ffe9a8 0%, #f2ba52 50%, #b9781f 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  filter: drop-shadow(0 1px 0 #3d240a);
+}
+#upgrade-panel .up-stats {
+  font-size: 11px; color: #c8b47a; margin-bottom: 8px; line-height: 1.6;
+  background: rgba(0,0,0,0.28); border: 1px solid rgba(120,90,30,0.35);
+  border-radius: 7px; padding: 6px 8px;
+  font-family: 'Georgia', serif; letter-spacing: 0;
+}
+/* Upgrade button — brass plank */
 .up-btn {
   display: block; width: 100%;
   margin-top: 6px;
-  padding: 7px;
-  background: linear-gradient(180deg, rgba(80,55,10,0.65) 0%, rgba(38,24,2,0.70) 100%);
-  border: 1px solid #8b6914;
-  border-top-color: #b08820;
-  border-bottom-color: #4a3508;
-  border-radius: 6px;
-  color: #f0e6d3;
+  padding: 9px;
+  background:
+    linear-gradient(180deg, rgba(255,244,208,0.38) 0%, transparent 26%),
+    linear-gradient(180deg, #c89a2a 0%, #a06e1e 50%, #7a5015 100%);
+  border: 1px solid #6a4512;
+  border-top-color: #a07820;
+  border-bottom-color: #3a2008;
+  border-radius: 8px;
+  color: #2a1806;
   cursor: pointer;
   font-size: 12px;
-  font-family: 'Georgia', serif;
+  font-family: 'IM Fell English SC', Georgia, serif;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 0 rgba(255,244,208,0.45);
   transition: all 0.15s;
-  box-shadow: inset 0 1px 0 rgba(200,150,40,0.12);
+  box-shadow: 0 0 0 2px #1c1002, 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,240,180,0.45);
 }
 .up-btn:hover:not(:disabled) {
-  background: linear-gradient(180deg, rgba(139,105,20,0.80) 0%, rgba(60,42,6,0.85) 100%);
-  box-shadow: 0 2px 10px rgba(139,105,20,0.4), inset 0 1px 0 rgba(200,150,40,0.18);
-  transform: translateY(-1px);
+  transform: translateY(-1px); filter: brightness(1.08);
+  box-shadow: 0 0 0 2px #1c1002, 0 5px 14px rgba(217,164,65,0.3), inset 0 1px 0 rgba(255,240,180,0.55);
 }
-.up-btn:disabled { opacity: 0.38; cursor: not-allowed; }
+.up-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+/* Sell button — weathered red plank */
 .up-btn.sell {
-  background: linear-gradient(180deg, rgba(80,20,10,0.65) 0%, rgba(38,8,2,0.70) 100%);
-  border-color: #884444; border-top-color: #aa5555;
+  color: #f0b6b0;
+  text-shadow: none;
+  background: linear-gradient(180deg, rgba(92,20,14,0.92) 0%, rgba(46,8,5,0.95) 100%);
+  border-color: #7a2020; border-top-color: #aa3030; border-bottom-color: #3a0808;
+  box-shadow: 0 0 0 2px rgba(30,6,4,0.7), 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,120,100,0.14);
 }
-.up-btn.sell:hover { background: linear-gradient(180deg, rgba(130,40,20,0.80) 0%, rgba(70,15,5,0.85) 100%); }
+.up-btn.sell:hover { background: linear-gradient(180deg, #7a1810 0%, #3a0704 100%); border-color: #ff5a4a; color: #ffd7d0; }
 
 /* ── Next wave button ────────────────────────────────── */
 #btn-next-wave {
-  background: linear-gradient(180deg, rgba(160,108,0,0.95) 0%, rgba(90,58,0,0.95) 100%);
-  border: 3px solid #ffd700;
-  border-bottom-color: #8b6914;
-  border-right-color: #8b6914;
-  border-radius: 12px;
-  padding: 13px 30px;
-  color: #fff8cc;
-  font-size: 17px;
-  font-family: 'Georgia', serif;
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 14px 36px 12px;
   cursor: pointer;
   pointer-events: all;
-  letter-spacing: 0.4px;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-  box-shadow: 0 6px 22px rgba(180,130,0,0.55), inset 0 1px 0 rgba(255,230,80,0.25);
-  transition: transform 0.15s, box-shadow 0.15s;
+  color: #2a1806;
+  font-family: 'IM Fell English SC', Georgia, serif;
+  font-size: 18px;
+  letter-spacing: 0.8px;
+  background:
+    linear-gradient(180deg, rgba(255,244,208,0.55) 0%, transparent 26%),
+    linear-gradient(180deg, #e6bb62 0%, #cb932f 46%, #a06e1e 100%);
+  border: 2px solid #6a4512;
+  border-radius: 10px;
+  text-shadow: 0 1px 0 rgba(255,244,208,0.55);
+  box-shadow:
+    0 0 0 4px #241606,
+    0 0 0 6px #7a5518,
+    0 14px 28px rgba(0,0,0,0.6),
+    inset 0 2px 0 rgba(255,247,214,0.65),
+    inset 0 -6px 16px rgba(90,55,10,0.45);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s;
   animation: wave-btn-pulse 2.2s ease-in-out infinite;
 }
+#btn-next-wave::before {
+  content: '';
+  position: absolute; inset: 6px; border-radius: 6px; pointer-events: none;
+  background:
+    radial-gradient(circle 2.5px at 7px 7px, #2c1c07 60%, transparent 62%),
+    radial-gradient(circle 2.5px at calc(100% - 7px) 7px, #2c1c07 60%, transparent 62%),
+    radial-gradient(circle 2.5px at 7px calc(100% - 7px), #2c1c07 60%, transparent 62%),
+    radial-gradient(circle 2.5px at calc(100% - 7px) calc(100% - 7px), #2c1c07 60%, transparent 62%);
+}
 @keyframes wave-btn-pulse {
-  0%,100% { box-shadow: 0 6px 22px rgba(180,130,0,0.55), inset 0 1px 0 rgba(255,230,80,0.25); }
-  50%     { box-shadow: 0 8px 34px rgba(255,200,0,0.75), inset 0 1px 0 rgba(255,230,80,0.25), 0 0 0 3px rgba(255,215,0,0.18); }
+  0%,100% {
+    box-shadow:
+      0 0 0 4px #241606,
+      0 0 0 6px #7a5518,
+      0 14px 28px rgba(0,0,0,0.6),
+      inset 0 2px 0 rgba(255,247,214,0.65),
+      inset 0 -6px 16px rgba(90,55,10,0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 0 4px #241606,
+      0 0 0 6px #a8781f,
+      0 18px 38px rgba(217,164,65,0.45),
+      inset 0 2px 0 rgba(255,247,214,0.75),
+      inset 0 -6px 16px rgba(90,55,10,0.45),
+      0 0 0 9px rgba(255,215,0,0.10);
+  }
 }
 #btn-next-wave:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 34px rgba(255,200,0,0.65);
+  filter: brightness(1.06);
+  box-shadow:
+    0 0 0 4px #241606,
+    0 0 0 6px #a8781f,
+    0 20px 42px rgba(217,164,65,0.4),
+    inset 0 2px 0 rgba(255,247,214,0.75),
+    inset 0 -6px 16px rgba(90,55,10,0.45);
 }
 #btn-next-wave:active { transform: translateY(-1px); }
 
 /* ── HUD tip bar ─────────────────────────────────────── */
 #hud-tip {
   position: absolute;
-  bottom: 72px;
+  bottom: 78px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(6, 17, 31, 0.75);
-  border: 1px solid #4a3a10;
-  border-radius: 6px;
-  padding: 5px 14px;
+  background: linear-gradient(180deg, rgba(20,12,4,0.96) 0%, rgba(8,4,1,0.97) 100%);
+  border: 1px solid #6a4a14;
+  border-radius: 8px;
+  padding: 6px 16px;
   font-size: 12px;
-  color: #a89060;
+  font-family: 'IM Fell English SC', Georgia, serif;
+  color: #c8a860;
+  letter-spacing: 0.3px;
   pointer-events: none;
   white-space: nowrap;
+  box-shadow: 0 0 0 2px rgba(20,12,4,0.6), 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(200,160,60,0.10);
 }
 
 /* ── Tutorial overlay ────────────────────────────────── */
@@ -268,21 +358,34 @@ body {
 
 /* ── Speed button ────────────────────────────────────────── */
 #btn-speed {
-  background: rgba(20, 60, 100, 0.85);
-  border: 2px solid #4488cc;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(180deg, rgba(48,90,80,0.94) 0%, rgba(26,54,50,0.95) 100%);
+  border: 1px solid #3e7d6e;
   border-radius: 8px;
   padding: 6px 14px;
-  color: #c8e8ff;
-  font-size: 14px;
-  font-family: 'Georgia', serif;
+  color: #d3e8d9;
+  font-size: 13px;
+  font-family: 'IM Fell English SC', Georgia, serif;
+  letter-spacing: 0.4px;
   cursor: pointer;
   pointer-events: all;
-  transition: background 0.15s, border-color 0.15s;
+  transition: transform 0.15s, background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  box-shadow: 0 0 0 2px rgba(10,26,22,0.5), 0 4px 10px rgba(0,0,0,0.4), inset 0 1px 0 rgba(180,230,205,0.15);
   white-space: nowrap;
 }
-#btn-speed:hover { background: rgba(40, 100, 180, 0.9); border-color: #88bbff; }
-#btn-speed[data-speed="2"] { border-color: #ffaa00; color: #ffdd88; background: rgba(80, 50, 0, 0.85); }
-#btn-speed[data-speed="3"] { border-color: #ff4444; color: #ffaaaa; background: rgba(80, 10, 10, 0.85); }
+#btn-speed:hover { transform: translateY(-1px); background: linear-gradient(180deg, #3d8574 0%, #26564c 100%); border-color: #74c4ab; color: #eafff4; box-shadow: 0 0 0 2px rgba(10,26,22,0.5), 0 6px 14px rgba(30,110,85,0.35), inset 0 1px 0 rgba(180,230,205,0.22); }
+#btn-speed[data-speed="2"] {
+  border-color: #9a7218; color: #f0d87a;
+  background: linear-gradient(180deg, rgba(100,70,8,0.94) 0%, rgba(60,40,3,0.95) 100%);
+  box-shadow: 0 0 0 2px rgba(20,10,2,0.6), 0 4px 12px rgba(150,110,20,0.3), inset 0 1px 0 rgba(255,210,80,0.15);
+}
+#btn-speed[data-speed="3"] {
+  border-color: #7a2020; color: #f0b0b0;
+  background: linear-gradient(180deg, rgba(92,20,14,0.94) 0%, rgba(46,8,5,0.95) 100%);
+  box-shadow: 0 0 0 2px rgba(30,6,4,0.7), 0 4px 12px rgba(150,40,30,0.3), inset 0 1px 0 rgba(255,120,100,0.12);
+}
 
 /* ── Wave bonus toast ────────────────────────────────────── */
 #wave-toast {
@@ -311,7 +414,9 @@ body {
 #map-select-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(3, 8, 18, 0.96);
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 40%, rgba(120,80,26,0.22) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(11,24,38,0.97) 0%, rgba(2,6,13,0.98) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -324,15 +429,20 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 24px;
-  max-width: 900px;
+  max-width: 1000px;
   width: 95%;
+  font-family: 'IM Fell English', Georgia, serif;
 }
 
 .map-select-title {
-  font-size: 34px;
-  color: #ffd700;
-  text-shadow: 0 0 20px #8b6914;
+  font-family: 'Pirata One', Georgia, serif;
+  font-weight: 400;
+  font-size: 52px;
   letter-spacing: 1px;
+  background: linear-gradient(180deg, #ffe9a8 0%, #f2ba52 45%, #c07f22 80%, #8a5311 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  filter: drop-shadow(0 2px 0 #3d240a) drop-shadow(0 0 22px rgba(217,164,65,0.4));
 }
 
 #map-cards {
@@ -343,92 +453,136 @@ body {
 }
 
 .map-card {
-  background: linear-gradient(180deg, rgba(16,28,52,0.97) 0%, rgba(8,14,30,0.97) 100%);
-  border: 2px solid #4a3a10;
-  border-top-color: #7a6020;
-  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(28,20,8,0.98) 0%, rgba(12,8,3,0.98) 100%);
+  border: 2px solid #6a4a14;
+  border-radius: 12px;
   padding: 16px;
   cursor: pointer;
-  width: 220px;
+  width: 224px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  transition: all 0.2s;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.6), inset 0 1px 0 rgba(200,160,50,0.06);
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  box-shadow:
+    0 0 0 3px rgba(20,12,4,0.9),
+    0 8px 26px rgba(0,0,0,0.6),
+    inset 0 1px 0 rgba(217,164,65,0.14);
 }
 .map-card:hover {
-  border-color: #ffd700;
-  border-top-color: #ffe87a;
+  border-color: #f2ba52;
   transform: translateY(-5px);
-  box-shadow: 0 12px 40px rgba(255,215,0,0.32), inset 0 1px 0 rgba(255,220,60,0.1);
+  box-shadow:
+    0 0 0 3px rgba(20,12,4,0.9),
+    0 14px 40px rgba(217,164,65,0.3),
+    inset 0 1px 0 rgba(255,220,120,0.2);
 }
 
-.map-preview-svg { border-radius: 8px; display: block; }
+.map-preview-svg { border-radius: 8px; display: block; border: 1px solid rgba(120,90,40,0.4); }
 
 .map-card-name {
-  font-size: 17px;
-  font-weight: bold;
-  color: #f0e6d3;
+  font-family: 'IM Fell English SC', Georgia, serif;
+  font-size: 19px;
+  color: #e8d3a0;
   text-align: center;
+  letter-spacing: 0.5px;
 }
 
 .map-card-sub {
-  font-size: 12px;
-  color: #8a7855;
+  font-size: 13px;
+  color: #9a835a;
   text-align: center;
   line-height: 1.4;
+  font-style: italic;
 }
 
 .map-card-stats {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 12px;
+  font-size: 13px;
   color: #c8b87a;
-  border-top: 1px solid #2a2010;
+  border-top: 1px solid rgba(120,90,40,0.35);
   padding-top: 8px;
 }
 
 .back-btn {
-  background: rgba(30, 30, 50, 0.7);
-  border: 1px solid #4a4a6a;
+  font-family: 'IM Fell English SC', Georgia, serif;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: linear-gradient(180deg, rgba(48,90,80,0.94), rgba(26,54,50,0.95));
+  border: 1px solid #3e7d6e;
   border-radius: 8px;
-  padding: 8px 22px;
-  color: #9090b0;
-  font-size: 14px;
-  font-family: 'Georgia', serif;
+  padding: 10px 24px;
+  color: #d3e8d9;
+  font-size: 15px;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  box-shadow: 0 0 0 3px rgba(10,26,22,0.55), 0 6px 16px rgba(0,0,0,0.4);
+  transition: transform 0.15s, background 0.15s, border-color 0.15s;
 }
-.back-btn:hover { background: rgba(50, 50, 80, 0.9); color: #d0d0f0; }
+.back-btn:hover { transform: translateY(-2px); background: linear-gradient(180deg,#3d8574,#26564c); border-color: #74c4ab; color: #eafff4; }
 
 /* ── Overlays (shared) ───────────────────────────────── */
 .hidden { display: none !important; }
 
 /* ── Main Menu ───────────────────────────────────────── */
+/* ── Main menu — aged sea-chart / carved-brass pirate theme ── */
 #menu-overlay {
   position: fixed;
   inset: 0;
-  background: linear-gradient(180deg,
-    rgba(3,8,18,0.88) 0%,
-    rgba(3,8,18,0.72) 50%,
-    rgba(3,8,18,0.92) 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 100;
+  overflow: hidden;
+  font-family: 'IM Fell English', Georgia, serif;
+  background:
+    radial-gradient(ellipse 85% 60% at 50% 42%, rgba(120,80,26,0.30) 0%, transparent 60%),
+    radial-gradient(circle at 50% 125%, rgba(24,66,88,0.55) 0%, transparent 58%),
+    linear-gradient(180deg, #0b1826 0%, #071220 52%, #02060d 100%);
+}
+/* film grain */
+#menu-overlay::before {
+  content: '';
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+}
+/* vignette */
+#menu-overlay::after {
+  content: '';
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  box-shadow: inset 0 0 200px 70px rgba(0,0,0,0.8);
+  background: radial-gradient(ellipse at 50% 46%, transparent 52%, rgba(2,6,12,0.68) 100%);
 }
 
-/* Top bar */
+#compass-rose {
+  position: absolute;
+  width: 640px; height: 640px;
+  top: 50%; left: 50%;
+  color: #d9a441;
+  opacity: 0.09;
+  z-index: 0;
+  pointer-events: none;
+  transform: translate(-50%, -52%);
+  animation: rose-spin 120s linear infinite;
+  filter: drop-shadow(0 0 18px rgba(217,164,65,0.25));
+}
+@keyframes rose-spin {
+  from { transform: translate(-50%,-52%) rotate(0deg); }
+  to   { transform: translate(-50%,-52%) rotate(360deg); }
+}
+
+/* Top bar — parchment nameplate */
 #menu-topbar {
   position: absolute;
   top: 0; left: 0; right: 0;
-  padding: 14px 22px;
+  padding: 12px 22px;
   display: flex;
   align-items: center;
-  background: rgba(3, 8, 18, 0.72);
-  border-bottom: 1px solid rgba(139, 105, 20, 0.25);
+  z-index: 2;
+  background: linear-gradient(180deg, rgba(8,16,26,0.9) 0%, rgba(8,16,26,0.35) 100%);
+  border-bottom: 1px solid rgba(217,164,65,0.28);
   backdrop-filter: blur(6px);
   animation: slide-down 0.4s ease;
 }
@@ -437,153 +591,239 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 5px 16px 5px 6px;
+  background: rgba(22,14,4,0.55);
+  border: 1px solid rgba(217,164,65,0.32);
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255,230,160,0.12);
 }
 
-.player-avatar-icon { font-size: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6)); }
+.player-avatar-icon {
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  font-size: 18px;
+  background: radial-gradient(circle at 35% 30%, #3a2a12, #140c04);
+  border: 1px solid #7a5418;
+  box-shadow: inset 0 1px 2px rgba(255,220,150,0.2);
+}
 
 #player-name-display {
-  font-size: 16px;
-  color: #f0e6d3;
-  font-family: 'Georgia', serif;
+  font-family: 'IM Fell English SC', Georgia, serif;
+  font-size: 17px;
+  letter-spacing: 0.5px;
+  color: #e8d3a0;
 }
 
 #btn-edit-name {
   background: none; border: none;
-  font-size: 14px; cursor: pointer;
-  opacity: 0.45; transition: opacity 0.15s; padding: 2px 4px;
+  font-size: 13px; cursor: pointer;
+  opacity: 0.5; transition: opacity 0.15s; padding: 2px 4px;
 }
 #btn-edit-name:hover { opacity: 1; }
 
 #player-name-input {
   font-size: 15px;
-  font-family: 'Georgia', serif;
+  font-family: 'IM Fell English', Georgia, serif;
   background: rgba(0,0,0,0.55);
   border: 1px solid #8b6914;
   border-radius: 6px;
   color: #f0e6d3;
   padding: 4px 10px;
-  width: 150px;
+  width: 160px;
   outline: none;
 }
 #player-name-input:focus { border-color: #ffd700; }
 
 /* Center content */
 #menu-center {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 36px;
+  gap: 34px;
 }
 
 #menu-title-block {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  animation: fade-up 0.5s ease 0.1s both;
+  gap: 6px;
+  animation: fade-up 0.6s ease 0.1s both;
 }
 
 #menu-anchor-deco {
-  font-size: 36px;
-  opacity: 0.7;
+  font-size: 30px;
+  color: #7fb4c4;
+  opacity: 0.85;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.6));
   animation: bob 4s ease-in-out infinite;
 }
 @keyframes bob {
-  0%,100% { transform: translateY(0); }
-  50%     { transform: translateY(-6px); }
+  0%,100% { transform: translateY(0)   rotate(-2deg); }
+  50%     { transform: translateY(-7px) rotate(2deg); }
 }
 
 #menu-title {
-  font-size: 68px;
-  color: #ffd700;
-  text-shadow: 0 0 40px rgba(255,215,0,0.55), 0 0 80px rgba(139,105,20,0.35), 0 4px 10px #000;
-  letter-spacing: 4px;
+  font-family: 'Pirata One', Georgia, serif;
+  font-weight: 400;
+  font-size: 110px;
+  line-height: 0.86;
+  letter-spacing: 2px;
   margin: 0;
-  animation: title-glow 3.5s ease-in-out infinite;
+  background: linear-gradient(180deg, #ffe9a8 0%, #f2ba52 40%, #c07f22 76%, #8a5311 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  filter:
+    drop-shadow(0 2px 0 #3d240a)
+    drop-shadow(0 4px 1px #1c1004)
+    drop-shadow(0 0 30px rgba(217,164,65,0.4));
+  animation: title-flicker 5s ease-in-out infinite;
 }
-@keyframes title-glow {
-  0%,100% { text-shadow: 0 0 32px rgba(255,215,0,0.45), 0 4px 10px #000; }
-  50%     { text-shadow: 0 0 64px rgba(255,215,0,0.85), 0 0 100px rgba(139,105,20,0.5), 0 4px 10px #000; }
+@keyframes title-flicker {
+  0%,100% { filter: drop-shadow(0 2px 0 #3d240a) drop-shadow(0 4px 1px #1c1004) drop-shadow(0 0 24px rgba(217,164,65,0.32)); }
+  50%     { filter: drop-shadow(0 2px 0 #3d240a) drop-shadow(0 4px 1px #1c1004) drop-shadow(0 0 46px rgba(240,190,80,0.6)); }
+}
+
+.title-rule {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 320px;
+  color: #b78a44;
+  font-size: 15px;
+}
+.title-rule::before, .title-rule::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(90deg, transparent, #b78a44, transparent);
 }
 
 #menu-tagline {
-  font-size: 16px;
-  color: #c8a860;
-  letter-spacing: 6px;
-  text-transform: uppercase;
+  font-family: 'IM Fell English SC', Georgia, serif;
+  font-size: 17px;
+  color: #cbb27e;
+  letter-spacing: 3px;
   margin: 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.6);
 }
 
 #menu-btn-group {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
 }
 
+/* Primary CTA — carved brass plank with corner rivets */
 .menu-main-btn {
-  display: block;
-  width: 280px;
-  padding: 20px 32px;
-  font-size: 22px;
-  font-family: 'Georgia', serif;
-  background: linear-gradient(180deg, rgba(165,112,0,0.97) 0%, rgba(95,62,0,0.97) 100%);
-  border: 3px solid #ffd700;
-  border-bottom-color: #7a5508;
-  border-right-color: #7a5508;
-  border-radius: 14px;
-  color: #fff8cc;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  width: 340px;
+  padding: 16px 30px 14px;
   cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
-  box-shadow: 0 8px 28px rgba(180,130,0,0.60), inset 0 1px 0 rgba(255,230,80,0.22);
-  letter-spacing: 0.5px;
-  text-shadow: 0 2px 6px rgba(0,0,0,0.7);
-  animation: fade-up 0.5s ease 0.3s both;
+  color: #2a1806;
+  font-family: 'IM Fell English SC', Georgia, serif;
+  background:
+    linear-gradient(180deg, rgba(255,244,208,0.55) 0%, transparent 26%),
+    linear-gradient(180deg, #e6bb62 0%, #cb932f 46%, #a06e1e 100%);
+  border: 2px solid #6a4512;
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 4px #241606,
+    0 0 0 6px #7a5518,
+    0 16px 30px rgba(0,0,0,0.55),
+    inset 0 2px 0 rgba(255,247,214,0.65),
+    inset 0 -7px 16px rgba(90,55,10,0.5);
+  text-shadow: 0 1px 0 rgba(255,244,208,0.5);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s;
+  animation: fade-up 0.6s ease 0.3s both;
 }
+.menu-main-btn::before {
+  content: '';
+  position: absolute; inset: 6px; border-radius: 6px; pointer-events: none;
+  background:
+    radial-gradient(circle 2.5px at 7px 7px, #2c1c07 60%, transparent 62%),
+    radial-gradient(circle 2.5px at calc(100% - 7px) 7px, #2c1c07 60%, transparent 62%),
+    radial-gradient(circle 2.5px at 7px calc(100% - 7px), #2c1c07 60%, transparent 62%),
+    radial-gradient(circle 2.5px at calc(100% - 7px) calc(100% - 7px), #2c1c07 60%, transparent 62%);
+}
+.menu-main-btn .mb-title { font-size: 27px; letter-spacing: 1px; line-height: 1.1; }
+.menu-main-btn .mb-sub   { font-size: 12.5px; letter-spacing: 0.5px; color: #5a3a10; opacity: 0.9; }
 .menu-main-btn:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 14px 44px rgba(255,215,0,0.50), inset 0 1px 0 rgba(255,230,80,0.28);
-  border-color: #ffe87a;
+  transform: translateY(-3px);
+  filter: brightness(1.06);
+  box-shadow:
+    0 0 0 4px #241606,
+    0 0 0 6px #a8781f,
+    0 20px 40px rgba(217,164,65,0.35),
+    inset 0 2px 0 rgba(255,247,214,0.75),
+    inset 0 -7px 16px rgba(90,55,10,0.5);
 }
-.menu-main-btn:active { transform: translateY(-1px) scale(1.01); }
+.menu-main-btn:active { transform: translateY(-1px); }
 
 #menu-secondary-row {
   display: flex;
   gap: 12px;
-  animation: fade-up 0.5s ease 0.48s both;
+  animation: fade-up 0.6s ease 0.48s both;
 }
 
+/* Secondary — verdigris copper plates */
 .menu-sec-btn {
-  padding: 13px 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-family: 'IM Fell English SC', Georgia, serif;
   font-size: 15px;
-  font-family: 'Georgia', serif;
-  background: rgba(16, 36, 70, 0.88);
-  border: 2px solid #2a4a7a;
-  border-radius: 12px;
-  color: #a8c4e0;
+  letter-spacing: 0.5px;
+  color: #d3e8d9;
+  background: linear-gradient(180deg, rgba(48,90,80,0.94) 0%, rgba(26,54,50,0.95) 100%);
+  border: 1px solid #3e7d6e;
+  border-radius: 8px;
   cursor: pointer;
+  box-shadow:
+    0 0 0 3px rgba(10,26,22,0.55),
+    0 8px 18px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(180,230,205,0.18);
   transition: transform 0.15s, background 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
+.menu-sec-btn .sb-ico { font-size: 16px; }
 .menu-sec-btn:hover {
   transform: translateY(-2px);
-  background: rgba(25, 58, 110, 0.95);
-  border-color: #5588cc;
-  box-shadow: 0 6px 20px rgba(68,102,180,0.35);
-  color: #c8dcf8;
+  background: linear-gradient(180deg, #3d8574 0%, #26564c 100%);
+  border-color: #74c4ab;
+  color: #eafff4;
+  box-shadow:
+    0 0 0 3px rgba(10,26,22,0.55),
+    0 10px 24px rgba(30,110,85,0.4),
+    inset 0 1px 0 rgba(180,230,205,0.28);
 }
 
 /* Floating decorations */
 .menu-floater {
   position: absolute;
   pointer-events: none;
+  z-index: 0;
   font-size: 38px;
-  opacity: 0.1;
+  opacity: 0.12;
+  color: #cbb27e;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
 }
-.floater-1 { bottom: 18%; animation: float-across 28s linear infinite; }
-.floater-2 { bottom: 9%;  animation: float-across 20s linear infinite; animation-delay: -10s; font-size: 26px; opacity: 0.08; }
+.floater-1 { bottom: 20%; animation: float-across 30s linear infinite; }
+.floater-2 { bottom: 10%; animation: float-across 22s linear infinite; animation-delay: -11s; font-size: 26px; opacity: 0.10; }
+.floater-3 { top: 22%; animation: float-across 40s linear infinite; animation-delay: -6s; font-size: 30px; opacity: 0.07; }
 @keyframes float-across {
-  from { transform: translateX(-80px) rotate(-6deg); }
-  to   { transform: translateX(calc(100vw + 80px)) rotate(6deg); }
+  from { transform: translateX(-90px) rotate(-6deg); }
+  to   { transform: translateX(calc(100vw + 90px)) rotate(6deg); }
 }
 
 /* Shared keyframes */
@@ -601,16 +841,18 @@ body {
   background: linear-gradient(180deg, rgba(28,16,4,0.97) 0%, rgba(10,6,2,0.97) 100%);
   border: 2px solid #a07c18;
   border-bottom-color: #5a4008;
-  border-radius: 8px;
-  padding: 6px 12px;
+  border-right-color: #5a4008;
+  border-radius: 10px;
+  padding: 6px 13px;
   color: #c8b87a;
   font-size: 15px;
+  font-family: 'IM Fell English SC', Georgia, serif;
   cursor: pointer;
   pointer-events: all;
   transition: all 0.15s;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+  box-shadow: 0 0 0 2px #1a0e02, 0 4px 14px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,210,100,0.12);
 }
-#btn-pause-hud:hover { border-color: #ffd700; color: #ffd700; transform: scale(1.08); }
+#btn-pause-hud:hover { border-color: #d9a441; color: #ffd700; transform: scale(1.08); box-shadow: 0 0 0 2px #1a0e02, 0 6px 18px rgba(217,164,65,0.3), inset 0 1px 0 rgba(255,210,100,0.18); }
 
 /* ── Pause overlay ───────────────────────────────────── */
 #pause-overlay {
@@ -625,37 +867,41 @@ body {
 }
 
 .pause-box {
-  background: linear-gradient(180deg, rgba(22,13,4,0.99) 0%, rgba(8,4,1,0.99) 100%);
-  border: 2px solid #9a7218;
-  border-top-color: #c89a28;
+  background: linear-gradient(180deg, rgba(26,18,8,0.99) 0%, rgba(10,7,3,0.99) 100%);
+  border: 2px solid #6a4a14;
   border-radius: 16px;
-  padding: 28px 32px;
+  padding: 26px 30px;
   width: 340px;
   max-width: 92vw;
-  box-shadow: 0 12px 50px rgba(0,0,0,0.8), inset 0 1px 0 rgba(200,160,40,0.12);
+  box-shadow: 0 0 0 3px rgba(20,12,4,0.9), 0 12px 50px rgba(0,0,0,0.8), inset 0 1px 0 rgba(217,164,65,0.14);
   animation: pop-in 0.25s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 18px;
+  font-family: 'IM Fell English', Georgia, serif;
 }
 
 .pause-title {
-  font-size: 26px;
-  color: #ffd700;
-  text-shadow: 0 0 20px rgba(255,215,0,0.4);
+  font-family: 'Pirata One', Georgia, serif;
+  font-weight: 400;
+  font-size: 40px;
   margin: 0;
+  background: linear-gradient(180deg, #ffe9a8 0%, #f2ba52 45%, #c07f22 80%, #8a5311 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  filter: drop-shadow(0 2px 0 #3d240a) drop-shadow(0 0 18px rgba(217,164,65,0.35));
 }
 
 .pause-stats {
   width: 100%;
-  background: rgba(0,0,0,0.3);
-  border: 1px solid #3a2a08;
+  background: rgba(0,0,0,0.32);
+  border: 1px solid rgba(120,90,40,0.4);
   border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
+  padding: 11px 15px;
+  font-size: 14px;
   color: #c8b87a;
-  line-height: 1.7;
+  line-height: 1.75;
 }
 
 .pause-btns {
@@ -665,51 +911,70 @@ body {
   gap: 8px;
 }
 
+/* Base = carved brass plank (matches menu CTA) */
 .pause-btn {
   width: 100%;
   padding: 12px;
-  font-size: 16px;
-  font-family: 'Georgia', serif;
-  background: linear-gradient(180deg, rgba(80,55,10,0.70) 0%, rgba(38,24,2,0.75) 100%);
-  border: 2px solid #7a5a10;
-  border-top-color: #a07818;
+  font-size: 17px;
+  font-family: 'IM Fell English SC', Georgia, serif;
+  color: #2a1806;
+  background:
+    linear-gradient(180deg, rgba(255,244,208,0.45) 0%, transparent 24%),
+    linear-gradient(180deg, #e0b458 0%, #c1892c 46%, #996a1c 100%);
+  border: 2px solid #6a4512;
   border-radius: 10px;
-  color: #f0e6d3;
   cursor: pointer;
-  transition: all 0.15s;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.7);
-  box-shadow: inset 0 1px 0 rgba(200,150,40,0.10);
+  transition: transform 0.15s, filter 0.15s, box-shadow 0.15s;
+  text-shadow: 0 1px 0 rgba(255,244,208,0.5);
+  box-shadow: 0 0 0 2px #241606, 0 4px 12px rgba(0,0,0,0.45), inset 0 2px 0 rgba(255,247,214,0.55);
 }
-.pause-btn:hover {
-  background: linear-gradient(180deg, rgba(139,105,20,0.85) 0%, rgba(60,42,6,0.90) 100%);
-  border-color: #ffd700;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(139,105,20,0.4), inset 0 1px 0 rgba(200,150,40,0.18);
-}
+.pause-btn:hover { transform: translateY(-2px); filter: brightness(1.06); }
+
+/* Convidar Amigo = verdigris copper plate */
 .pause-btn-blue {
-  background: linear-gradient(180deg, rgba(20,50,100,0.80) 0%, rgba(10,25,55,0.85) 100%);
-  border-color: #2a5090; border-top-color: #4070c0;
-  color: #a8c8f0;
+  color: #d3e8d9;
+  text-shadow: none;
+  background: linear-gradient(180deg, rgba(48,90,80,0.95) 0%, rgba(26,54,50,0.96) 100%);
+  border-color: #3e7d6e;
+  box-shadow: 0 0 0 2px rgba(10,26,22,0.6), 0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(180,230,205,0.18);
 }
-.pause-btn-blue:hover { border-color: #5599ff; background: linear-gradient(180deg, rgba(30,70,140,0.90) 0%, rgba(15,40,80,0.95) 100%); }
+.pause-btn-blue:hover { border-color: #74c4ab; background: linear-gradient(180deg, #3d8574 0%, #26564c 100%); color: #eafff4; }
+
+/* Desistir = weathered red plank */
 .pause-btn-red {
-  background: linear-gradient(180deg, rgba(80,15,10,0.80) 0%, rgba(40,6,4,0.85) 100%);
-  border-color: #7a2020; border-top-color: #aa3030;
-  color: #f0a0a0;
+  color: #f0b6b0;
+  text-shadow: none;
+  background: linear-gradient(180deg, rgba(92,20,14,0.92) 0%, rgba(46,8,5,0.95) 100%);
+  border-color: #7a2020;
+  box-shadow: 0 0 0 2px rgba(30,6,4,0.7), 0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,120,100,0.14);
 }
-.pause-btn-red:hover { border-color: #ff4444; background: linear-gradient(180deg, rgba(120,20,15,0.90) 0%, rgba(60,8,5,0.95) 100%); }
+.pause-btn-red:hover { border-color: #ff5a4a; background: linear-gradient(180deg, #7a1810 0%, #3a0704 100%); color: #ffd7d0; }
+.pause-btn.armed {
+  border-color: #ff5555; color: #ffd0d0;
+  background: linear-gradient(180deg, rgba(150,25,18,0.95) 0%, rgba(80,10,6,0.97) 100%);
+  animation: giveup-pulse 0.9s ease-in-out infinite;
+}
+@keyframes giveup-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,60,60,0.55); }
+  50%      { box-shadow: 0 0 14px 3px rgba(255,60,60,0.55); }
+}
+/* Menu Principal = dark weathered wood */
 .pause-btn-dim {
-  background: rgba(20,20,30,0.70);
-  border-color: #2a2a3a; border-top-color: #3a3a50;
-  color: #7080a0;
+  color: #9a835a;
+  text-shadow: none;
+  background: linear-gradient(180deg, rgba(32,25,13,0.9) 0%, rgba(14,10,4,0.92) 100%);
+  border-color: #3a2c12;
+  box-shadow: 0 0 0 2px rgba(20,12,4,0.7), inset 0 1px 0 rgba(120,90,40,0.12);
 }
-.pause-btn-dim:hover { border-color: #5555aa; color: #aab8d8; }
+.pause-btn-dim:hover { border-color: #6a4a14; color: #c8b078; }
 
 /* ── Game over ───────────────────────────────────────── */
 #gameover-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(3, 8, 18, 0.93);
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 42%, rgba(120,80,26,0.22) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(11,24,38,0.95) 0%, rgba(2,6,13,0.96) 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -717,23 +982,46 @@ body {
   gap: 18px;
   z-index: 100;
   backdrop-filter: blur(8px);
+  font-family: 'IM Fell English', Georgia, serif;
 }
-#gameover-overlay h2   { font-size: 40px; }
-#gameover-overlay #go-score { font-size: 18px; color: #c8b87a; }
+#gameover-overlay h2 {
+  font-family: 'Pirata One', Georgia, serif;
+  font-weight: 400;
+  font-size: 62px;
+  letter-spacing: 1px;
+  filter: drop-shadow(0 2px 0 #3d240a) drop-shadow(0 0 26px rgba(217,164,65,0.35));
+}
+#gameover-overlay #go-score { font-size: 19px; color: #cbb27e; }
 
-#btn-restart {
-  background: rgba(139, 105, 20, 0.65);
-  border: 3px solid #ffd700;
-  border-radius: 12px;
+/* brass plank */
+#btn-restart, #btn-continue-endless {
   padding: 13px 38px;
-  color: #f0e6d3;
   font-size: 20px;
-  font-family: 'Georgia', serif;
+  font-family: 'IM Fell English SC', Georgia, serif;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
+  transition: transform 0.15s, filter 0.15s;
   margin-top: 8px;
 }
-#btn-restart:hover { background: rgba(139, 105, 20, 0.95); transform: scale(1.03); }
+#btn-restart {
+  color: #2a1806;
+  background:
+    linear-gradient(180deg, rgba(255,244,208,0.5) 0%, transparent 26%),
+    linear-gradient(180deg, #e6bb62 0%, #cb932f 46%, #a06e1e 100%);
+  border: 2px solid #6a4512;
+  text-shadow: 0 1px 0 rgba(255,244,208,0.5);
+  box-shadow: 0 0 0 3px #241606, 0 8px 20px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,247,214,0.6);
+}
+#btn-restart:hover { transform: translateY(-2px); filter: brightness(1.06); }
+
+/* verdigris */
+#btn-continue-endless {
+  color: #eafff4;
+  background: linear-gradient(180deg, #3d8574 0%, #26564c 100%);
+  border: 2px solid #3e7d6e;
+  box-shadow: 0 0 0 3px rgba(10,26,22,0.6), 0 8px 20px rgba(20,80,60,0.4), inset 0 1px 0 rgba(180,230,205,0.25);
+}
+#btn-continue-endless:hover { transform: translateY(-2px); filter: brightness(1.08); }
 
 /* ── Multiplayer overlay ─────────────────────────────── */
 #mp-overlay {
@@ -748,14 +1036,15 @@ body {
 }
 
 .mp-box {
-  background: rgba(6, 16, 38, 0.98);
-  border: 2px solid #1a3a6a;
-  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(26,18,8,0.99) 0%, rgba(10,7,3,0.99) 100%);
+  border: 2px solid #6a4a14;
+  border-radius: 16px;
   padding: 28px;
   width: 420px;
   max-width: 95vw;
-  box-shadow: 0 10px 60px rgba(0,0,0,0.75);
+  box-shadow: 0 0 0 3px rgba(20,12,4,0.9), 0 12px 60px rgba(0,0,0,0.75);
   animation: pop-in 0.3s ease;
+  font-family: 'IM Fell English', Georgia, serif;
 }
 @keyframes pop-in {
   from { opacity: 0; transform: scale(0.9) translateY(12px); }
@@ -768,10 +1057,17 @@ body {
   align-items: center;
   margin-bottom: 22px;
 }
-.mp-title { font-size: 22px; color: #88ccff; margin: 0; }
+.mp-title {
+  font-family: 'Pirata One', Georgia, serif;
+  font-weight: 400; font-size: 30px; margin: 0;
+  background: linear-gradient(180deg, #ffe9a8 0%, #f2ba52 50%, #b9781f 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  filter: drop-shadow(0 2px 0 #3d240a);
+}
 .mp-close-btn {
   background: none; border: none;
-  color: #557799; font-size: 18px;
+  color: #a8895a; font-size: 18px;
   cursor: pointer; padding: 4px 8px;
   transition: color 0.15s; line-height: 1;
 }
@@ -797,25 +1093,28 @@ body {
   display: flex; flex-direction: column;
   gap: 14px; align-items: center; width: 100%;
 }
-.mp-or { font-size: 13px; color: #3a5a6a; }
+.mp-or { font-size: 14px; color: #7a6038; font-style: italic; }
 
+/* Primary — brass plank (matches menu CTA) */
 .mp-action-btn {
   display: flex; flex-direction: column;
-  align-items: center; gap: 4px;
-  width: 100%; padding: 15px;
-  font-size: 17px; font-family: 'Georgia', serif;
-  background: rgba(16, 44, 88, 0.85);
-  border: 2px solid #2a5090;
-  border-radius: 12px;
-  color: #b8d0f0;
+  align-items: center; gap: 2px;
+  width: 100%; padding: 14px;
+  font-family: 'IM Fell English SC', Georgia, serif;
+  font-size: 20px;
+  color: #2a1806;
+  background:
+    linear-gradient(180deg, rgba(255,244,208,0.5) 0%, transparent 26%),
+    linear-gradient(180deg, #e6bb62 0%, #cb932f 46%, #a06e1e 100%);
+  border: 2px solid #6a4512;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  text-shadow: 0 1px 0 rgba(255,244,208,0.5);
+  box-shadow: 0 0 0 3px #241606, 0 8px 20px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,247,214,0.6);
+  transition: transform 0.15s, filter 0.15s;
 }
-.mp-action-btn:hover {
-  background: rgba(24, 64, 130, 0.95);
-  border-color: #4488cc; transform: translateY(-2px);
-}
-.mp-action-sub { font-size: 12px; color: #4a6880; }
+.mp-action-btn:hover { transform: translateY(-2px); filter: brightness(1.06); }
+.mp-action-sub { font-size: 12.5px; color: #5a3a10; }
 
 .mp-join-row { display: flex; gap: 10px; width: 100%; }
 
@@ -823,10 +1122,10 @@ body {
   flex: 1;
   min-width: 0;          /* let the input shrink so the Entrar button stays inside the box */
   box-sizing: border-box;
-  background: rgba(0,0,0,0.55);
-  border: 2px solid #2a5090;
+  background: rgba(0,0,0,0.5);
+  border: 2px solid #6a4a14;
   border-radius: 10px;
-  color: #88ccff;
+  color: #f2d79a;
   font-size: 26px;
   font-family: 'Courier New', monospace;
   text-align: center;
@@ -836,30 +1135,32 @@ body {
   outline: none;
   transition: border-color 0.15s;
 }
-.mp-code-input:focus { border-color: #4488ff; }
+.mp-code-input:focus { border-color: #d9a441; }
 
 .mp-join-btn {
-  padding: 10px 16px; font-size: 14px; font-family: 'Georgia', serif;
-  background: rgba(15, 70, 45, 0.85);
-  border: 2px solid #2a7048;
+  padding: 10px 18px; font-size: 15px;
+  font-family: 'IM Fell English SC', Georgia, serif;
+  background: linear-gradient(180deg, rgba(48,90,80,0.94), rgba(26,54,50,0.95));
+  border: 1px solid #3e7d6e;
   border-radius: 10px;
-  color: #88ddaa; cursor: pointer;
-  transition: background 0.15s; white-space: nowrap;
+  color: #d3e8d9; cursor: pointer;
+  box-shadow: 0 0 0 3px rgba(10,26,22,0.5);
+  transition: transform 0.15s, background 0.15s, border-color 0.15s; white-space: nowrap;
 }
-.mp-join-btn:hover { background: rgba(22, 100, 65, 0.95); }
+.mp-join-btn:hover { transform: translateY(-2px); background: linear-gradient(180deg,#3d8574,#26564c); border-color: #74c4ab; color: #eafff4; }
 
 #mp-room-code-row {
   display: flex; align-items: center; gap: 10px;
   background: rgba(0,0,0,0.38);
-  border: 1px solid #1e3a5a;
+  border: 1px solid rgba(120,90,40,0.45);
   border-radius: 10px;
   padding: 10px 16px; width: 100%; box-sizing: border-box;
 }
-.mp-label { font-size: 11px; color: #4a6880; flex-shrink: 0; }
+.mp-label { font-size: 12px; color: #9a835a; flex-shrink: 0; font-family: 'IM Fell English SC', Georgia, serif; }
 .mp-code-big {
   font-size: 28px;
   font-family: 'Courier New', monospace;
-  color: #88ccff;
+  color: #f2d79a;
   letter-spacing: 8px; font-weight: bold; flex: 1;
 }
 .mp-copy-btn {
@@ -942,35 +1243,47 @@ body {
   z-index: 120; backdrop-filter: blur(8px);
 }
 .htp-box {
-  background: rgba(7, 18, 36, 0.98);
-  border: 2px solid #8b6914;
-  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(26,18,8,0.99) 0%, rgba(10,7,3,0.99) 100%);
+  border: 2px solid #6a4a14;
+  border-radius: 16px;
   padding: 28px 32px;
-  max-width: 600px; width: 90%;
+  max-width: 620px; width: 90%;
   max-height: 82vh; overflow-y: auto;
-  box-shadow: 0 10px 50px rgba(0,0,0,0.7);
+  box-shadow: 0 0 0 3px rgba(20,12,4,0.9), 0 12px 50px rgba(0,0,0,0.7);
   display: flex; flex-direction: column; align-items: center;
+  font-family: 'IM Fell English', Georgia, serif;
 }
-.htp-title { font-size: 26px; color: #ffd700; margin: 0 0 18px; }
+.htp-title {
+  font-family: 'Pirata One', Georgia, serif;
+  font-weight: 400; font-size: 40px; margin: 0 0 18px;
+  background: linear-gradient(180deg, #ffe9a8 0%, #f2ba52 45%, #c07f22 80%, #8a5311 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  filter: drop-shadow(0 2px 0 #3d240a) drop-shadow(0 0 18px rgba(217,164,65,0.35));
+}
 .htp-content { display: flex; flex-direction: column; gap: 16px; width: 100%; }
-.htp-section h3 { font-size: 14px; color: #c8b87a; margin: 0 0 7px; }
-.htp-section p  { font-size: 13px; color: #a89060; line-height: 1.6; margin: 3px 0; }
-.htp-section code { color: #88aabb; font-family: 'Courier New', monospace; font-size: 12px; }
+.htp-section h3 {
+  font-family: 'IM Fell English SC', Georgia, serif;
+  font-size: 16px; color: #d9a441; margin: 0 0 7px; letter-spacing: 0.5px;
+}
+.htp-section p  { font-size: 14px; color: #b79f70; line-height: 1.6; margin: 3px 0; }
+.htp-section code { color: #7fc0b0; font-family: 'Courier New', monospace; font-size: 12px; }
 .htp-tower-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 8px;
 }
 .htp-tower-card {
-  background: rgba(139,105,20,0.1);
-  border: 1px solid #3a2a08;
+  background: rgba(139,105,20,0.12);
+  border: 1px solid #4a3410;
   border-radius: 8px;
   padding: 8px 10px;
+  box-shadow: inset 0 1px 0 rgba(217,164,65,0.1);
 }
 .htp-tc-icon { font-size: 20px; margin-bottom: 4px; }
-.htp-tc-name { font-size: 12px; font-weight: bold; color: #f0e6d3; }
-.htp-tc-cost { font-size: 11px; color: #c8a030; }
-.htp-tc-desc { font-size: 11px; color: #7a6040; margin-top: 2px; }
+.htp-tc-name { font-family: 'IM Fell English SC', Georgia, serif; font-size: 13px; color: #e8d3a0; }
+.htp-tc-cost { font-size: 12px; color: #d9a441; }
+.htp-tc-desc { font-size: 12px; color: #8a7048; margin-top: 2px; }
 
 /* ── Invite friend mid-match ── */
 #invite-overlay {

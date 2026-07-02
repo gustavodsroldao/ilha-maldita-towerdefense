@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ilha Maldita — Tower Defense</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script type="importmap">
   {
@@ -25,7 +28,7 @@
       <div class="hud-box" id="score-box">⭐ <span id="score-amount">0</span></div>
     </div>
     <div id="hud-tr">
-      <div class="hud-box" id="wave-box">Onda <span id="wave-current">0</span>/10</div>
+      <div class="hud-box" id="wave-box">Onda <span id="wave-current">0</span>/<span id="wave-total">10</span></div>
       <div class="hud-box" id="wind-box">
         <canvas id="compass" width="52" height="52"></canvas>
         <span id="wind-label">—</span>
@@ -57,23 +60,52 @@
       </div>
     </div>
 
+    <svg id="compass-rose" viewBox="0 0 200 200" aria-hidden="true">
+      <g fill="none" stroke="currentColor" stroke-width="0.6">
+        <circle cx="100" cy="100" r="92"/>
+        <circle cx="100" cy="100" r="78"/>
+        <circle cx="100" cy="100" r="40"/>
+      </g>
+      <g stroke="currentColor" stroke-width="0.6">
+        <line x1="100" y1="8"  x2="100" y2="192"/>
+        <line x1="8"  y1="100" x2="192" y2="100"/>
+        <line x1="35" y1="35" x2="165" y2="165"/>
+        <line x1="165" y1="35" x2="35" y2="165"/>
+      </g>
+      <g fill="currentColor">
+        <polygon points="100,12 108,100 100,100"/>
+        <polygon points="100,12 92,100 100,100"/>
+        <polygon points="188,100 100,108 100,100"/>
+        <polygon points="188,100 100,92 100,100"/>
+        <polygon points="100,188 92,100 100,100" opacity="0.6"/>
+        <polygon points="100,188 108,100 100,100" opacity="0.6"/>
+        <polygon points="12,100 100,92 100,100" opacity="0.6"/>
+        <polygon points="12,100 100,108 100,100" opacity="0.6"/>
+      </g>
+    </svg>
+
     <div id="menu-center">
       <div id="menu-title-block">
         <div id="menu-anchor-deco">⚓</div>
-        <h1 id="menu-title">ILHA MALDITA</h1>
-        <p id="menu-tagline">Tower Defense</p>
+        <h1 id="menu-title">Ilha Maldita</h1>
+        <div class="title-rule"><span>☠</span></div>
+        <p id="menu-tagline">Defesa nos Mares Amaldiçoados</p>
       </div>
       <div id="menu-btn-group">
-        <button id="btn-play-solo" class="menu-main-btn">⚔️ Jogar Solo</button>
+        <button id="btn-play-solo" class="menu-main-btn">
+          <span class="mb-title">⚔ Zarpar Sozinho</span>
+          <span class="mb-sub">Defenda a ilha das hordas inimigas</span>
+        </button>
         <div id="menu-secondary-row">
-          <button id="btn-play-mp" class="menu-sec-btn">👥 Multijogador</button>
-          <button id="btn-howtoplay" class="menu-sec-btn">📖 Como Jogar</button>
+          <button id="btn-play-mp" class="menu-sec-btn"><span class="sb-ico">🏴‍☠️</span> Tripulação</button>
+          <button id="btn-howtoplay" class="menu-sec-btn"><span class="sb-ico">🗺️</span> Como Jogar</button>
         </div>
       </div>
     </div>
 
     <div class="menu-floater floater-1">🚢</div>
     <div class="menu-floater floater-2">⚓</div>
+    <div class="menu-floater floater-3">☸</div>
   </div>
 
   <!-- ── Map selection ── -->
@@ -215,6 +247,7 @@
   <div id="gameover-overlay" class="hidden">
     <h2 id="go-title"></h2>
     <p id="go-score"></p>
+    <button id="btn-continue-endless" class="hidden">🌊 Continuar — Modo Infinito</button>
     <button id="btn-restart">⚓ Menu Principal</button>
   </div>
 

@@ -20,7 +20,7 @@ export const TOWER_DEFS = {
     icon: '⛓️', name: 'Corrente',
     desc: 'Desacelera −45% por 2.5s',
     range: 15, damage: 18, fireRate: 0.7, cost: 125,
-    color: 0x556677,
+    color: 0x556677, noRotate: true,
   },
   watchtower: {
     icon: '🔭', name: 'Vigia',
@@ -32,13 +32,13 @@ export const TOWER_DEFS = {
     icon: '⚡', name: 'Farol',
     desc: 'Raio encadeia 2 navios',
     range: 16, damage: 28, fireRate: 1.5, cost: 150,
-    color: 0x888800,
+    color: 0x888800, noRotate: true,
   },
   fortress: {
     icon: '🏰', name: 'Fortaleza',
     desc: 'Defesa pesada: alto dano e alcance',
     range: 19, damage: 75, fireRate: 0.45, cost: 300,
-    color: 0x6a5a48,
+    color: 0x6a5a48, noRotate: true,
   },
 };
 
@@ -101,10 +101,30 @@ export class Tower {
       grp.add(fire);
 
     } else if (type === 'chain') {
-      // Mobile cannon represents the chain/anchor tower
-      const model = AssetLoader.get('cannon-mobile');
-      model.scale.setScalar(1.1);
+      // Stone pedestal
+      const base = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.60, 0.70, 0.35, 8),
+        new THREE.MeshStandardMaterial({ color: 0x7a6a50, roughness: 0.95 })
+      );
+      base.castShadow = true;
+      grp.add(base);
+
+      // Barrel model sitting on top
+      const model = AssetLoader.get('barrel');
+      model.scale.setScalar(1.3);
+      model.position.y = 0.35;
       grp.add(model);
+
+      // Chain rings (torus) orbiting the barrel
+      const ringMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.85, roughness: 0.25 });
+      for (let i = 0; i < 2; i++) {
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.07, 8, 20), ringMat);
+        ring.rotation.x = Math.PI / 2;
+        ring.rotation.z = (i * Math.PI) / 2;
+        ring.position.y = 0.55 + i * 0.45;
+        grp.add(ring);
+      }
+
 
     } else if (type === 'watchtower') {
       const model = AssetLoader.get('tower-watch');
@@ -217,7 +237,7 @@ export class Tower {
     if (this._barrel) {
       const dir = new THREE.Vector3().subVectors(this._target.mesh.position, this.position);
       this._barrel.parent.rotation.y = Math.atan2(dir.x, dir.z);
-    } else {
+    } else if (!TOWER_DEFS[this.type].noRotate) {
       const dir = new THREE.Vector3().subVectors(this._target.mesh.position, this.position);
       this.mesh.rotation.y = Math.atan2(dir.x, dir.z);
     }

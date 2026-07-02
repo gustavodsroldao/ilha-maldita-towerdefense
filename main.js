@@ -352,13 +352,13 @@ document.getElementById('btn-copy-code').addEventListener('click', () => {
 
 document.getElementById('btn-mp-ready').addEventListener('click', () => {
   const btn = document.getElementById('btn-mp-ready');
-  const isReady = btn.classList.contains('ready');
+  const isReady  = btn.classList.contains('ready');
+  const counting = btn.classList.contains('counting');
 
-  if (isReady) {
-    // Cancel ready
+  if (isReady || counting) {
+    // Cancel ready / interrupt countdown
     mp.setUnready();
-    btn.classList.remove('ready');
-    btn.textContent = '⚓ Pronto!';
+    resetReadyBtn();
     mpSetStatus('Você cancelou o pronto.');
   } else {
     // Mark as ready
@@ -370,12 +370,43 @@ document.getElementById('btn-mp-ready').addEventListener('click', () => {
   }
 });
 
-// ── game-start ────────────────────────────────────────────────────────────
+function resetReadyBtn() {
+  const btn = document.getElementById('btn-mp-ready');
+  btn.classList.remove('ready', 'counting');
+  btn.textContent = '⚓ Pronto!';
+  hideCountdownDisplay();
+}
+
+// ── Countdown display ──────────────────────────────────────────────
+
+function showCountdownDisplay(n) {
+  let el = document.getElementById('mp-countdown-display');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'mp-countdown-display';
+    // inject after the ready button inside the mp-screen-lobby
+    document.getElementById('mp-screen-lobby').appendChild(el);
+  }
+  el.textContent = n;
+  el.classList.remove('hidden', 'cd-out');
+  // pulse animation: remove/re-add class
+  el.classList.remove('cd-pop');
+  void el.offsetWidth;          // force reflow
+  el.classList.add('cd-pop');
+}
+
+function hideCountdownDisplay() {
+  const el = document.getElementById('mp-countdown-display');
+  if (el) el.classList.add('hidden');
+}
+
+// ── game-start + countdown ───────────────────────────────────────────
 
 function bindGameStart() {
   mp.on('game-start', async ({ mapId }) => {
     const def = MAP_DEFS[mapId];
     if (!def) { mpSetStatus('⚠️ Mapa inválido'); return; }
+    hideCountdownDisplay();
     document.getElementById('mp-overlay').classList.add('hidden');
     showLoading(def.name);
     await game.init(def, mp);

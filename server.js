@@ -14,6 +14,10 @@ function broadcast(room, msg, excludeId = null) {
     if (p.id !== excludeId) send(p.ws, msg);
 }
 
+function broadcastAll(room, msg) {
+  for (const p of room.players) send(p.ws, msg);
+}
+
 function genCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code;
@@ -21,6 +25,33 @@ function genCode() {
     code = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
   } while (rooms.has(code));
   return code;
+}
+
+const COUNTDOWN_SECONDS = 5;
+
+function startCountdown(room) {
+  if (room.countdown) return; // already counting
+
+  let remaining = COUNTDOWN_SECONDS;
+  broadcastAll(room, { type: 'countdown-tick', remaining });
+
+  room.countdown = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      clearInterval(room.countdown);
+      room.countdown = null;
+      broadcastAll(room, { type: 'game-start', mapId: room.mapId });
+    } else {
+      broadcastAll(room, { type: 'countdown-tick', remaining });
+    }
+  }, 1000);
+}
+
+function cancelCountdown(room, cancellerNickname) {
+  if (!room.countdown) return;
+  clearInterval(room.countdown);
+  room.countdown = null;
+  broadcastAll(room, { type: 'countdown-cancelled', nickname: cancellerNickname });
 }
 
 wss.on('connection', ws => {
@@ -38,7 +69,8 @@ wss.on('connection', ws => {
         code: roomCode,
         players: [{ id: playerId, nickname: msg.nickname, ws, ready: false }],
         mapId: msg.mapId ?? null,
-        inProgress: !!msg.inProgress,   // room opened mid-match (invite friend)
+        inProgress: !!msg.inProgress,
+        countdown: null,
       });
       send(ws, { type: 'room-created', code: roomCode, playerId });
       return;
@@ -47,8 +79,8 @@ wss.on('connection', ws => {
     if (msg.type === 'join-room') {
       const code = (msg.code || '').toUpperCase();
       const room = rooms.get(code);
-      if (!room)              { send(ws, { type: 'error', msg: 'Sala não encontrada' }); return; }
-      if (room.players.length >= 2) { send(ws, { type: 'error', msg: 'Sala cheia' });        return; }
+      if (!room)                    { send(ws, { type: 'error', msg: 'Sala não encontrada' }); return; }
+      if (room.players.length >= 2) { send(ws, { type: 'error', msg: 'Sala cheia' });          return; }
 
       playerId = genId();
       roomCode = code;
@@ -65,7 +97,7 @@ wss.on('connection', ws => {
       return;
     }
 
-    // All other messages: relay to room-mates
+    // All other messages require an active room
     const room = rooms.get(roomCode);
     if (!room) return;
 
@@ -76,17 +108,20 @@ wss.on('connection', ws => {
     if (msg.type === 'ready') {
       const p = room.players.find(p => p.id === playerId);
       if (p) p.ready = true;
-      // Check all ready → start game
+      broadcast(room, { type: 'player-ready', playerId }, playerId);
       if (room.players.length >= 2 && room.players.every(p => p.ready)) {
-        broadcast(room, { type: 'game-start', mapId: room.mapId });
-        return;
+        startCountdown(room);
       }
+      return;
     }
 
     if (msg.type === 'unready') {
       const p = room.players.find(p => p.id === playerId);
-      if (p) p.ready = false;
-      broadcast(room, { type: 'player-unready', playerId }, playerId);
+      if (p) {
+        p.ready = false;
+        cancelCountdown(room, p.nickname);
+        broadcast(room, { type: 'player-unready', playerId }, playerId);
+      }
       return;
     }
 
@@ -97,7 +132,10 @@ wss.on('connection', ws => {
     const room = rooms.get(roomCode);
     if (!room) return;
     const p = room.players.find(p => p.id === playerId);
-    if (p) broadcast(room, { type: 'player-left', playerId, nickname: p.nickname });
+    if (p) {
+      cancelCountdown(room, p.nickname);
+      broadcast(room, { type: 'player-left', playerId, nickname: p.nickname });
+    }
     room.players = room.players.filter(p => p.id !== playerId);
     if (room.players.length === 0) rooms.delete(roomCode);
   });
